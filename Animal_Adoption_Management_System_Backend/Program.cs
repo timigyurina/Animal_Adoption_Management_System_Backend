@@ -26,14 +26,23 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
 
+builder.Services.AddTransient<DataInitialiser>();
+
 
 var app = builder.Build();
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+using var scope = app.Services.CreateScope();
+IServiceProvider services = scope.ServiceProvider;
+
+var initializer = services.GetRequiredService<DataInitialiser>();
+await initializer.SeedAsync();
 
 app.UseHttpsRedirection();
 
@@ -44,4 +53,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
