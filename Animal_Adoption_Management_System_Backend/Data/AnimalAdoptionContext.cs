@@ -1,4 +1,5 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
+﻿using Animal_Adoption_Management_System_Backend.Data.SeedConfigurations;
+using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,5 +22,16 @@ namespace Animal_Adoption_Management_System_Backend.Data
         public DbSet<AdoptionApplication> AdoptionApplications { get; set; }
         public DbSet<AdoptionContract> AdoptionContracts { get; set; }
         public DbSet<ManagedAdoptionContract> ManagedAdoptionContracts { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfiguration(new RoleSeedConfiguration());
+            modelBuilder.ApplyConfiguration(new UserSeedConfiguration());
+            modelBuilder.ApplyConfiguration(new UserRoleSeedConfiguration());
+
+        }
     }
+
 }
