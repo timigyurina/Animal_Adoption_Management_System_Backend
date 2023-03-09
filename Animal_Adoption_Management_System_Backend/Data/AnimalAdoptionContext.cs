@@ -1,9 +1,10 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Animal_Adoption_Management_System_Backend.Data
 {
-    public class AnimalAdoptionContext : DbContext
+    public class AnimalAdoptionContext : IdentityDbContext<User>
     {
         public AnimalAdoptionContext(DbContextOptions options)
            : base(options)

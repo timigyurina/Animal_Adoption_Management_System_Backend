@@ -1,4 +1,6 @@
 using Animal_Adoption_Management_System_Backend.Data;
+using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,12 +17,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AnimalAdoptionContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddIdentityCore<User>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AnimalAdoptionContext>();
 
 builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
 {
     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
-
 
 
 var app = builder.Build();
@@ -30,7 +34,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 
 app.UseHttpsRedirection();
 
