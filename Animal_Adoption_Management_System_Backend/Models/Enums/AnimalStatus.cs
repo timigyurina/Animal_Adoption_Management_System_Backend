@@ -4,7 +4,7 @@
     {
         WaitingForAdoption,
         Adopted,
-        NoAdoptable,
+        NotAdoptable,
         Deceased,
         Other
     }
