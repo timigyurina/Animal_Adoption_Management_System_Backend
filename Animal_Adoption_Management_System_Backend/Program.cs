@@ -1,22 +1,52 @@
+using Animal_Adoption_Management_System_Backend.Data;
+using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+string connectionString = builder.Configuration.GetConnectionString("AnimalAdoptionConnection") ?? throw new InvalidOperationException("Connection string 'AnimalAdoptionConnection' was not found.");
+
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+builder.Services.AddDbContext<AnimalAdoptionContext>(options =>
+    options.UseNpgsql(connectionString));
 
-// Configure the HTTP request pipeline.
+builder.Services.AddIdentityCore<User>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AnimalAdoptionContext>();
+
+builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
+{
+    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+}));
+
+builder.Services.AddTransient<DataInitialiser>();
+
+
+var app = builder.Build();
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+using var scope = app.Services.CreateScope();
+IServiceProvider services = scope.ServiceProvider;
+
+var initializer = services.GetRequiredService<DataInitialiser>();
+await initializer.SeedAsync();
+
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
