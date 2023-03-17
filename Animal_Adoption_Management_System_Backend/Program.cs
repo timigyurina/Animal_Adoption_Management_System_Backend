@@ -1,5 +1,9 @@
+using Animal_Adoption_Management_System_Backend.Configurations;
 using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Repositories;
+using Animal_Adoption_Management_System_Backend.Services.Implementations;
+using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,10 +30,27 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
 
+
+builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
+
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IAnimalBreedService, AnimalBreedService>();
+builder.Services.AddScoped<IAnimalService, AnimalService>();
+builder.Services.AddScoped<IShelterService, ShelterService>();
+builder.Services.AddScoped<IAnimalShelterService, AnimalShelterService>();
+builder.Services.AddScoped<IDonationService, DonationService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IAdoptionApplicationService, AdoptionApplicationService>();
+builder.Services.AddScoped<IAdoptionContractService, AdoptionContractService>();
+builder.Services.AddScoped<IManagedAdoptionContractService, ManagedAdoptionContractService>();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<DataInitialiser>();
 
 
+
 var app = builder.Build();
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 if (app.Environment.IsDevelopment())
