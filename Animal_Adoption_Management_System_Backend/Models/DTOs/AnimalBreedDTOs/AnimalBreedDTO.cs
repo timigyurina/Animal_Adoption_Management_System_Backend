@@ -1,4 +1,4 @@
-﻿namespace Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreed
+﻿namespace Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreedDTOS
 {
     public class AnimalBreedDTO : BaseAnimalBreedDTO
     {
