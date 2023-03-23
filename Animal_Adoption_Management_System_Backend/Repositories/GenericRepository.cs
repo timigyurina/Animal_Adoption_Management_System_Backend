@@ -6,8 +6,8 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        private readonly AnimalAdoptionContext _context;
-        private readonly DbSet<T> _dbSet;
+        internal readonly AnimalAdoptionContext _context;
+        internal readonly DbSet<T> _dbSet;
         public GenericRepository(AnimalAdoptionContext context)
         {
             _context = context;
@@ -45,14 +45,14 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task<T> AddAsync(T entity)
+        public virtual async Task<T> AddAsync(T entity)
         {
             await _context.AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
 
-        public async Task UpdateAsync(T entity)
+        public virtual async Task UpdateAsync(T entity)
         {
             _context.Update(entity);
             await _context.SaveChangesAsync();
