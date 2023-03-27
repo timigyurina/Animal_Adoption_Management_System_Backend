@@ -22,7 +22,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _mapper = mapper;
         }
 
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AnimalBreedDTO>>> GetAllRBreeds()
         {
@@ -34,9 +33,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AnimalBreedDTO>> GetBreed(int id)
         {
-            AnimalBreed? breed = await _unitOfWork.AnimalBreedService.GetAsync(id);
-            if (breed == null)
-                throw new NotFoundException(typeof(AnimalBreed).Name, id);
+            AnimalBreed breed = await _unitOfWork.AnimalBreedService.GetAsync(id);
 
             AnimalBreedDTO breedDTO = _mapper.Map<AnimalBreedDTO>(breed);
             return Ok(breedDTO);
@@ -64,9 +61,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<AnimalBreedDTO>> UpdateBreed(int id, CreateAnimalBreedDTO animalBreedDTO)
         {
-            AnimalBreed? breedToUpdate = await _unitOfWork.AnimalBreedService.GetAsync(id);
-            if (breedToUpdate == null)
-                throw new NotFoundException(typeof(AnimalBreed).Name, id);
+            AnimalBreed breedToUpdate = await _unitOfWork.AnimalBreedService.GetAsync(id);
 
             _mapper.Map(animalBreedDTO, breedToUpdate);
 
@@ -89,12 +84,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBreed(int id)
         {
-            AnimalBreed? breedToDelete = await _unitOfWork.AnimalBreedService.GetAsync(id);
-            if (breedToDelete == null)
-                throw new NotFoundException(typeof(AnimalBreed).Name, id);
-
             await _unitOfWork.AnimalBreedService.DeleteAsync(id);
-
             return NoContent();
         }
     }

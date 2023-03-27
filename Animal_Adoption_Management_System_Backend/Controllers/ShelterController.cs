@@ -1,8 +1,5 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreedDTOS;
-using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
-using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
-using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
@@ -35,9 +32,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ShelterDTO>> GetShelter(int id)
         {
-            Shelter? shelter = await _unitOfWork.ShelterService.GetAsync(id);
-            if (shelter == null)
-                throw new NotFoundException(typeof(Shelter).Name, id);
+            Shelter shelter = await _unitOfWork.ShelterService.GetAsync(id);
 
             ShelterDTO shelterDTO = _mapper.Map<ShelterDTO>(shelter);
             return Ok(shelterDTO);
@@ -102,7 +97,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             ShelterDTO updatedShelterDTO = _mapper.Map<ShelterDTO>(updatedShelter);
             return Ok(updatedShelterDTO);
         }
-        
+
         [HttpPut("{id}/updateShelterContactPerson")]
         public async Task<ActionResult<ShelterDTO>> UpdateContactPerson(int id, [FromBody] string contactPersonId)
         {
@@ -115,12 +110,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteShelter(int id)
         {
-            Shelter? shelterToDelete = await _unitOfWork.ShelterService.GetAsync(id);
-            if (shelterToDelete == null)
-                throw new NotFoundException(typeof(Shelter).Name, id);
-
             await _unitOfWork.ShelterService.DeleteAsync(id);
-
             return NoContent();
         }
     }

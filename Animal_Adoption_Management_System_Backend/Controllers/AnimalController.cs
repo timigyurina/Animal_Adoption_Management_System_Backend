@@ -1,13 +1,10 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
-using Animal_Adoption_Management_System_Backend.Models.Entities;
-using Animal_Adoption_Management_System_Backend.Models.Exceptions;
-using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
-using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreedDTOS;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
-using Microsoft.EntityFrameworkCore;
+using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Services.Interfaces;
+using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
@@ -35,9 +32,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AnimalDTO>> GetAnimal(int id)
         {
-            Animal? animal = await _unitOfWork.AnimalService.GetAsync(id);
-            if (animal == null)
-                throw new NotFoundException(typeof(Animal).Name, id);
+            Animal animal = await _unitOfWork.AnimalService.GetAsync(id);
 
             AnimalDTO animalDTO = _mapper.Map<AnimalDTO>(animal);
             return Ok(animalDTO);
@@ -63,11 +58,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<AnimalDTO>> CreateAnimal(CreateAnimalDTO animalDTO)
         {
             Animal animalToCreate = _mapper.Map<Animal>(animalDTO);
-            AnimalBreed? breedOfAnimal = await _unitOfWork.AnimalBreedService.GetAsync(animalDTO.BreedId);
-            if (breedOfAnimal == null)
-                throw new NotFoundException(typeof(AnimalBreed).Name, animalDTO.BreedId);
-            animalToCreate.Breed = breedOfAnimal;
+            AnimalBreed breedOfAnimal = await _unitOfWork.AnimalBreedService.GetAsync(animalDTO.BreedId);
 
+            animalToCreate.Breed = breedOfAnimal;
             Animal createdAnimal = await _unitOfWork.AnimalService.AddAsync(animalToCreate);
 
             AnimalDTO createdAnimalDTO = _mapper.Map<AnimalDTO>(createdAnimal);
@@ -77,12 +70,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPost("{id}/addShelter")]
         public async Task<ActionResult<AnimalShelterDTO>> CreateAnimalShelterConnection(int id, CreateAnimalShelterDTO animaShelterlDTO)
         {
-            Animal? animal = await _unitOfWork.AnimalService.GetAsync(id);
-            if (animal == null)
-                throw new NotFoundException(typeof(Animal).Name, id);
-            Shelter? shelter = await _unitOfWork.ShelterService.GetAsync(animaShelterlDTO.ShelterId);
-            if (shelter == null)
-                throw new NotFoundException(typeof(Shelter).Name, animaShelterlDTO.ShelterId);
+            Animal animal = await _unitOfWork.AnimalService.GetAsync(id);
+            Shelter shelter = await _unitOfWork.ShelterService.GetAsync(animaShelterlDTO.ShelterId);
 
             AnimalShelter createdConnection = await _unitOfWork.AnimalShelterService.CreateAnimalShelterConnection(animal, shelter, animaShelterlDTO.EnrollmentDate);
             AnimalShelterDTO createdConnectionDTO = _mapper.Map<AnimalShelterDTO>(createdConnection);
@@ -98,27 +87,23 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(updatedAnimal);
             return Ok(updatedAnimalDTO);
         }
-        
+
         [HttpPut("{id}/updateStatus")]
-        public async Task<ActionResult<AnimalDTO>> UpdateStatus(int id, [FromBody]AnimalStatus newStatus)
+        public async Task<ActionResult<AnimalDTO>> UpdateStatus(int id, [FromBody] AnimalStatus newStatus)
         {
             Animal updatedAnimal = await _unitOfWork.AnimalService.UpdateStatus(id, newStatus);
 
             AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(updatedAnimal);
             return Ok(updatedAnimalDTO);
         }
-        
+
         [HttpPut("{id}")]
         public async Task<ActionResult<AnimalDTO>> UpdateAnimal(int id, UpdateAnimalDTO animalDTO)
         {
-            Animal? animal = await _unitOfWork.AnimalService.GetAsync(id);
-            if (animal == null)
-                throw new NotFoundException(typeof(Animal).Name, id);
-            AnimalBreed? breedOfAnimal = await _unitOfWork.AnimalBreedService.GetAsync(animalDTO.BreedId);
-            if (breedOfAnimal == null)
-                throw new NotFoundException(typeof(AnimalBreed).Name, animalDTO.BreedId);
-            animal.Breed = breedOfAnimal;
+            Animal animal = await _unitOfWork.AnimalService.GetAsync(id);
+            AnimalBreed breedOfAnimal = await _unitOfWork.AnimalBreedService.GetAsync(animalDTO.BreedId);
 
+            animal.Breed = breedOfAnimal;
             _mapper.Map(animalDTO, animal);
 
             await _unitOfWork.AnimalService.UpdateAsync(animal);
@@ -130,12 +115,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAnimal(int id)
         {
-            Animal? animalToDelete = await _unitOfWork.AnimalService.GetAsync(id);
-            if (animalToDelete == null)
-                throw new NotFoundException(typeof(Animal).Name, id);
-
             await _unitOfWork.AnimalService.DeleteAsync(id);
-
             return NoContent();
         }
     }

@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
+using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
-using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
-using Animal_Adoption_Management_System_Backend.Models.Entities;
-using Animal_Adoption_Management_System_Backend.Models.Exceptions;
-using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
@@ -21,7 +20,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _mapper = mapper;
         }
 
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DonationDTO>>> GetAllDonations()
         {
@@ -33,9 +31,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DonationDTO>> GetDonation(int id)
         {
-            Donation? donation = await _unitOfWork.DonationService.GetAsync(id);
-            if (donation == null)
-                throw new NotFoundException(typeof(Donation).Name, id);
+            Donation donation = await _unitOfWork.DonationService.GetAsync(id);
 
             DonationDTO donationDTO = _mapper.Map<DonationDTO>(donation);
             return Ok(donationDTO);
@@ -81,12 +77,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDonation(int id)
         {
-            Donation? donationToDelete = await _unitOfWork.DonationService.GetAsync(id);
-            if (donationToDelete == null)
-                throw new NotFoundException(typeof(Donation).Name, id);
-
             await _unitOfWork.DonationService.DeleteAsync(id);
-
             return NoContent();
         }
     }
