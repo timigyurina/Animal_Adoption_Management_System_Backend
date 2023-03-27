@@ -26,7 +26,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             if (!string.IsNullOrWhiteSpace(contactPersonName))
             {
                 shelterQuery = shelterQuery
-                    .Where(s => s.ContactPerson!.FirstName.ToLower().Contains(contactPersonName.ToLower()) || 
+                    .Where(s => s.ContactPerson!.FirstName.ToLower().Contains(contactPersonName.ToLower()) ||
                                 s.ContactPerson.LastName.ToLower().Contains(contactPersonName.ToLower()));
             }
             if (isActive != null)
@@ -62,11 +62,14 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .FirstAsync(s => s.Id == id);
         }
 
-        public async Task<Shelter> TryAddContactPersonToShelter(Shelter shelterToCreate, string contactPersonId)
+        public async Task<Shelter> TryAddContactPersonToShelter(Shelter shelterToCreate, string? contactPersonId)
         {
-            User? contactPerson = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == contactPersonId) ?? throw new NotFoundException(typeof(User).Name, contactPersonId);
-        
+            User? contactPerson;
+            if (contactPersonId != null)
+                contactPerson = await _context.Users.FirstOrDefaultAsync(u => u.Id == contactPersonId) ?? throw new NotFoundException(typeof(User).Name, contactPersonId);
+            else
+                contactPerson = null;
+
             shelterToCreate.ContactPerson = contactPerson;
             return shelterToCreate;
         }
