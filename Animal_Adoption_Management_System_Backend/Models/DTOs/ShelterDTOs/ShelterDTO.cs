@@ -3,14 +3,6 @@
     public class ShelterDTO : BaseShelterDTO
     {
         public int Id { get; set; }
+        public bool IsActive { get; set; }
     }
-    //public class ShelterDTOWithDetails : BaseShelterDTO
-    //{ 
-    //    public int Id { get; set; }
-
-    //    public AddressDTO Address { get; set; }
-    //    public User? ContactPerson { get; set; }
-    //    public virtual ICollection<AnimalShelter> Animals { get; set; }
-    //    public virtual ICollection<Donation> Donations { get; set; }
-    //}
 }

@@ -3,13 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs
 {
-    public class CreateShelterDTO : BaseShelterDTO
+    public class UpdateShelterContactInfoDTO : BaseShelterDTO
     {
         [Required]
         public CreateAddressDTO Address { get; set; }
-        [Required]
-        public bool IsActive { get; set; }
-
-        public string? ContactPersonId { get; set; }
     }
 }
