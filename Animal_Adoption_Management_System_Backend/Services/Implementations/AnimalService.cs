@@ -126,7 +126,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Animal> UpdateSterilisation(int id, UpdateSterilisationDTO sterilisationDate)
         {
-            Animal? animal = await GetAsync(id) ?? throw new NotFoundException(typeof(Animal).Name, id);
+            Animal animal = await GetAsync(id);
 
             animal.IsSterilised = true;
             animal.SterilisationDate = sterilisationDate.SterilisationDate;
@@ -137,10 +137,10 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Animal> UpdateStatus(int id, AnimalStatus newStatus)
         {
-            Animal? animal = await GetAsync(id) ?? throw new NotFoundException(typeof(Animal).Name, id);
+            Animal animal = await GetAsync(id);
             if ((int)newStatus > Enum.GetValues(typeof(AnimalStatus)).Length - 1 || (int)newStatus < 0)
                 throw new BadRequestException("Invalid AnimalStatus");
-            
+
             animal.Status = newStatus;
             await UpdateAsync(animal);
 

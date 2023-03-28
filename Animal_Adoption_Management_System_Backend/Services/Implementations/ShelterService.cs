@@ -76,7 +76,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Shelter> UpdateShelterIsActive(int id, bool isActive)
         {
-            Shelter? shelterToUpdate = await GetAsync(id) ?? throw new NotFoundException(typeof(Shelter).Name, id);
+            Shelter shelterToUpdate = await GetAsync(id);
 
             shelterToUpdate.IsActive = isActive;
             await UpdateAsync(shelterToUpdate);
@@ -86,7 +86,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Shelter> UpdateShelterContactPerson(int id, string contactPersonId)
         {
-            Shelter? shelterToUpdate = await GetAsync(id) ?? throw new NotFoundException(typeof(Shelter).Name, id);
+            Shelter shelterToUpdate = await GetAsync(id);
             User? contactPerson = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == contactPersonId) ?? throw new NotFoundException(typeof(User).Name, contactPersonId);
 

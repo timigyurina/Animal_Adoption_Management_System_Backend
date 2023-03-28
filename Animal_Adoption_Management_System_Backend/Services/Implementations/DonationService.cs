@@ -85,7 +85,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Donation> UpdateDonationStatus(int id, DonationStatus newStatus)
         {
-            Donation? donationToUpdate = await GetAsync(id) ?? throw new NotFoundException(typeof(Donation).Name, id);
+            Donation donationToUpdate = await GetAsync(id);
 
             if ((int)newStatus > Enum.GetValues(typeof(DonationStatus)).Length - 1 || (int)newStatus < 0)
                 throw new BadRequestException("Invalid DonationStatus");
