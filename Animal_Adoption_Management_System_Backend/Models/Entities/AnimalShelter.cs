@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public DateTime EnrollmentDate { get; set; }
+        public DateTime? ExitDate { get; set; }
 
         public Animal Animal { get; set; }
         public Shelter Shelter { get; set; }
