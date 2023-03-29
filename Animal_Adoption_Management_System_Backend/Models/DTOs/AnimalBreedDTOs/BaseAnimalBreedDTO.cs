@@ -1,7 +1,6 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreed
+namespace Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreedDTOS
 {
     public abstract class BaseAnimalBreedDTO
     {

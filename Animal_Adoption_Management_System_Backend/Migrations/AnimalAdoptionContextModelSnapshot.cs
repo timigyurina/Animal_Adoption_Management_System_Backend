@@ -214,6 +214,9 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                     b.Property<DateTime>("EnrollmentDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ExitDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("ShelterId")
                         .HasColumnType("integer");
 
@@ -365,6 +368,9 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -432,7 +438,8 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                         {
                             Id = "1bdd9ba1-82b5-4ef3-95b9-f13f6150d5ac",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "89c915f6-2c96-46b3-b042-00c0ca8586b6",
+                            ConcurrencyStamp = "d1f9cef6-bbdd-47ac-8d03-1a176e87f63d",
+                            DateOfBirth = new DateTime(1990, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             FirstName = "System",
@@ -441,9 +448,9 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAEAACcQAAAAELUEr/Ac4IgQa6H/G9ZmqZaf7gLh323Zpbou4RTQuO9T8awoulOHYL4AuhlTegniZA==",
+                            PasswordHash = "AQAAAAEAACcQAAAAEEx5tYvN4xpJDZX9UPtRo5p+6UkVFp4HNW3i7D2jmMGnc0/JMLjYngFbEMGmEt7o/g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "490efe45-5baf-403f-9f28-0500de2c28cd",
+                            SecurityStamp = "fc224c29-273c-4206-904a-795e1bffe89b",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         });
@@ -478,21 +485,21 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                         new
                         {
                             Id = "abcd1234-82b5-4ef3-95b9-f33f6130d5ac",
-                            ConcurrencyStamp = "dddbf1a6-29df-498b-aeda-5d3d6c9d8d6a",
+                            ConcurrencyStamp = "ddd0ef23-3dd0-4a58-b1f1-406757aec9cf",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "aaaa1111-82b5-4ef3-95b9-f33f6130d5ac",
-                            ConcurrencyStamp = "10289375-cdd0-4b13-b78e-87a9a68c573f",
+                            ConcurrencyStamp = "97d6c81b-7c9c-4586-beae-f7b544777adf",
                             Name = "ShelterEmployee",
                             NormalizedName = "SHELTEREMPLOYEE"
                         },
                         new
                         {
                             Id = "bbbb2222-82b5-4ef3-95b9-f33f6130d5ac",
-                            ConcurrencyStamp = "d875fc5b-b47e-40d7-9075-7011b1b454c6",
+                            ConcurrencyStamp = "a5d45988-0dc7-4d53-81f9-639c93e7a67d",
                             Name = "Adopter",
                             NormalizedName = "ADOPTER"
                         });
@@ -709,7 +716,7 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("Animal_Adoption_Management_System_Backend.Models.Entities.User", "Uploader")
-                        .WithMany()
+                        .WithMany("Images")
                         .HasForeignKey("UploaderId");
 
                     b.Navigation("Animal");
@@ -743,7 +750,7 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
                         .IsRequired();
 
                     b.HasOne("Animal_Adoption_Management_System_Backend.Models.Entities.User", "ContactPerson")
-                        .WithMany()
+                        .WithMany("Shelters")
                         .HasForeignKey("ContactPersonId");
 
                     b.Navigation("Address");
@@ -828,7 +835,11 @@ namespace Animal_Adoption_Management_System_Backend.Migrations
 
                     b.Navigation("Donations");
 
+                    b.Navigation("Images");
+
                     b.Navigation("ManagedAdoptionsContracts");
+
+                    b.Navigation("Shelters");
                 });
 #pragma warning restore 612, 618
         }

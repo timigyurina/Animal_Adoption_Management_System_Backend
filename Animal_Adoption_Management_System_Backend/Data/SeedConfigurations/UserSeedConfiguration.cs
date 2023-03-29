@@ -22,7 +22,8 @@ namespace Animal_Adoption_Management_System_Backend.Data.SeedConfigurations
                 EmailConfirmed = true,
                 FirstName = "System",
                 LastName = "Admin",
-                IsActive = true
+                IsActive = true,
+                DateOfBirth = new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             };
 
             builder.HasData(adminUser);
