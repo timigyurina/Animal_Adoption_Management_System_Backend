@@ -1,4 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AddressDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionApplicationDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionContractDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalBreedDTOS;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
@@ -38,6 +40,15 @@ namespace Animal_Adoption_Management_System_Backend.Configurations
             CreateMap<Donation, DonationDTO>().ReverseMap();
             CreateMap<Donation, DonationDTOWithDetails>().ReverseMap();
             CreateMap<Donation, CreateDonationDTO>().ReverseMap();
+
+            CreateMap<AdoptionApplication, AdoptionApplicationDTO>().ReverseMap();
+            CreateMap<AdoptionApplication, AdoptionApplicationDTOWithDetails>().ReverseMap();
+            CreateMap<AdoptionApplication, CreateAdoptionApplicationDTO>().ReverseMap();
+
+            CreateMap<AdoptionContract, AdoptionContractDTO>().ReverseMap();
+            CreateMap<AdoptionContract, AdoptionContractDTOWithDetails>().ReverseMap();
+            CreateMap<AdoptionContract, CreateAdoptionContractDTO>().ReverseMap();
+            CreateMap<AdoptionContract, AdoptionContractDTOWithManagerDetails>().ReverseMap();
         }
     }
 }
