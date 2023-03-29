@@ -34,6 +34,8 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
 
 builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 
+builder.Services.AddSingleton<IEnumService, EnumService>();
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAnimalBreedService, AnimalBreedService>();
 builder.Services.AddScoped<IAnimalService, AnimalService>();
