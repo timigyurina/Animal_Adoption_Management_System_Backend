@@ -1,7 +1,10 @@
 ﻿using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -9,6 +12,102 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
     {
         public AdoptionApplicationService(AnimalAdoptionContext context) : base(context)
         {
+        }
+
+        public async Task<AdoptionApplication> GetWithDetailsAsync(int id)
+        {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(AdoptionApplication).Name, id);
+
+            return await _context.AdoptionApplications
+                .Include(a => a.Animal)
+                .Include(a => a.Applier)
+                .AsNoTracking()
+                .FirstAsync(a => a.Id == id);
+        }
+
+        public async Task<IEnumerable<AdoptionApplication>> GetFilteredAdoptionApplicationsAsync(
+            string? animalName, 
+            string? applierName, 
+            DateTime? dateAfter, 
+            DateTime? dateBefore, 
+            ApplicationStatus? status)
+        {
+            IQueryable<AdoptionApplication> adoptionApplicationQuery = _context.AdoptionApplications
+                .Include(a => a.Animal)
+                .Include(a => a.Applier)
+                .AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(animalName))
+            {
+                adoptionApplicationQuery = adoptionApplicationQuery.Where(a => a.Animal.Name.ToLower().Contains(animalName.ToLower()));
+            }
+            if (!string.IsNullOrWhiteSpace(applierName))
+            {
+                adoptionApplicationQuery = adoptionApplicationQuery
+                    .Where(a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) || a.Applier.FirstName.ToLower().Contains(applierName.ToLower()));
+            }
+            if (dateAfter != null)
+            {
+                adoptionApplicationQuery = adoptionApplicationQuery.Where(a => a.ApplicationDate >= dateAfter);
+            }
+            if (dateBefore != null)
+            {
+                adoptionApplicationQuery = adoptionApplicationQuery.Where(a => a.ApplicationDate < dateBefore);
+            }
+            if (status != null)
+            {
+                if ((int)status > Enum.GetValues(typeof(ApplicationStatus)).Length - 1 || (int)status < 0)
+                    throw new BadRequestException("Invalid ApplicationStatus");
+                adoptionApplicationQuery = adoptionApplicationQuery.Where(a => a.Status == status);
+            }
+
+            return await adoptionApplicationQuery.ToListAsync();
+        }
+
+        public async Task<AdoptionApplication> TryAddAnimalAndApplierToAdoptionApplication(AdoptionApplication adoptionApplicationToCreate, int animalId, string applierId)
+        {
+            Animal animal = await _context.Animals
+                .FirstOrDefaultAsync(a => a.Id == animalId) ?? throw new NotFoundException(typeof(Animal).Name, animalId);
+            User applier = await _context.Users
+                .FirstOrDefaultAsync(a => a.Id == applierId) ?? throw new NotFoundException(typeof(User).Name, applierId);
+            if (animal.Status != AnimalStatus.WaitingForAdoption)
+                throw new BadRequestException($"Animal with id {animalId} is not adoptable");
+
+            adoptionApplicationToCreate.Animal = animal;
+            adoptionApplicationToCreate.Applier = applier;
+
+            return adoptionApplicationToCreate;
+        }
+
+        public async Task<AdoptionApplication> UpdateAdoptionApplicationStatus(int id, ApplicationStatus newStatus)
+        {
+            AdoptionApplication adoptionApplicationToUpdate = await GetAsync(id);
+
+            if ((int)newStatus > Enum.GetValues(typeof(ApplicationStatus)).Length - 1 || (int)newStatus < 0)
+                throw new BadRequestException("Invalid ApplicationStatus");
+
+            adoptionApplicationToUpdate.Status = newStatus;
+            await UpdateAsync(adoptionApplicationToUpdate);
+
+            return adoptionApplicationToUpdate;
+        }
+
+        public async Task SetAdoptionApplicationStatusForContractCreation(Animal animal, User applier)
+        {
+            AdoptionApplication adoptionApplication = await _context.AdoptionApplications
+                .Where(a => a.Animal == animal && a.Applier == applier && a.Status == ApplicationStatus.Submitted).FirstOrDefaultAsync()
+                ?? throw new BadRequestException($"AdoptionApplication for Animal {animal.Id} by User {applier.Id} has not been submitted");
+
+            adoptionApplication.Status = ApplicationStatus.Approved;
+            await UpdateAsync(adoptionApplication);
+        }
+
+        public override Task<AdoptionApplication> AddAsync(AdoptionApplication entity)
+        {
+            if (_context.AdoptionApplications.Any(a => a.Animal == entity.Animal && a.Applier == entity.Applier && a.Status == ApplicationStatus.Submitted))
+                throw new BadRequestException("Adoption Application for this User and Animal has been already submitted");
+            return base.AddAsync(entity);
         }
     }
 }
