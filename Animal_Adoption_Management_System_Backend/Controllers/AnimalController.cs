@@ -67,11 +67,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetAnimal", new { id = createdAnimal.Id }, createdAnimalDTO);
         }
 
-        [HttpPost("{id}/addShelter")]
+        [HttpPost("{id}/addShelterConnection")]  // when adding a new Animal to the system or when Animal is taken back to (new) Shelter again
         public async Task<ActionResult<AnimalShelterDTO>> CreateAnimalShelterConnection(int id, CreateAnimalShelterDTO animaShelterlDTO)
         {
             Animal animal = await _unitOfWork.AnimalService.GetAsync(id);
             Shelter shelter = await _unitOfWork.ShelterService.GetAsync(animaShelterlDTO.ShelterId);
+            // set Animal to be adoptable (if it was taken back to Shelter after being adopted)
+            await _unitOfWork.AnimalService.UpdateStatus(id, AnimalStatus.WaitingForAdoption);
 
             AnimalShelter createdConnection = await _unitOfWork.AnimalShelterService.CreateAnimalShelterConnection(animal, shelter, animaShelterlDTO.EnrollmentDate);
             AnimalShelterDTO createdConnectionDTO = _mapper.Map<AnimalShelterDTO>(createdConnection);
