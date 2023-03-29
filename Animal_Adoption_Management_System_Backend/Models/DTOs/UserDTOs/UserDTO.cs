@@ -3,6 +3,5 @@
     public class UserDTO : BaseUserDTO
     {
         public string Id { get; set; }
-
     }
 }
