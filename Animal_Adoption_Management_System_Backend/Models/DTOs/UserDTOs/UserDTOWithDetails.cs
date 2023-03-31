@@ -7,7 +7,7 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
 
 namespace Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs
 {
-    public class UserDTOWithDetails : BaseUserDTO
+    public class UserDTOWithDetails : UserDTO
     {
         public virtual ICollection<DonationDTO> Donations { get; set; }
         public virtual ICollection<ImageDTO> Images { get; set; }

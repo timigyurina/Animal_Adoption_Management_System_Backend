@@ -6,6 +6,7 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using AutoMapper;
@@ -36,6 +37,8 @@ namespace Animal_Adoption_Management_System_Backend.Configurations
 
             CreateMap<User, UserDTO>().ReverseMap();
             CreateMap<User, UserDTOWithDetails>().ReverseMap();
+            CreateMap<User, LoginUserDTO>().ReverseMap();
+            CreateMap<User, RegisterUserDTO>().ReverseMap();
 
             CreateMap<Donation, DonationDTO>().ReverseMap();
             CreateMap<Donation, DonationDTOWithDetails>().ReverseMap();
