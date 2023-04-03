@@ -9,8 +9,9 @@
         public bool IsActive { get; set; }
 
         public Address Address { get; set; }
-        public User? ContactPerson { get; set; }
+        public virtual ICollection<User> Employees { get; set; }
         public virtual ICollection<AnimalShelter> Animals { get; set; }
         public virtual ICollection<Donation> Donations { get; set; }
     }
+
 }
