@@ -10,9 +10,10 @@ namespace Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs
         public int Id { get; set; }
         public bool IsActive { get; set; }
 
-        public UserDTO? ContactPerson { get; set; }
+
         public AddressDTO Address { get; set; }
         public virtual ICollection<AnimalShelterDTO> Animals { get; set; }
         public virtual ICollection<DonationDTO> Donations { get; set; }
+        public virtual ICollection<UserDTO> Employees { get; set; }
     }
 }
