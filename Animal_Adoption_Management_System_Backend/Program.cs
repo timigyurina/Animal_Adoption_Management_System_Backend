@@ -51,6 +51,7 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdoptionApplicationService, AdoptionApplicationService>();
 builder.Services.AddScoped<IAdoptionContractService, AdoptionContractService>();
 builder.Services.AddScoped<IManagedAdoptionContractService, ManagedAdoptionContractService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<DataInitialiser>();
