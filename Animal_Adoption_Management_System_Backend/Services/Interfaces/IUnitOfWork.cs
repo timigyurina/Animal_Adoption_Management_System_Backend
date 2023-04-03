@@ -8,6 +8,7 @@
         public IAnimalBreedService AnimalBreedService { get; }
         public IDonationService DonationService { get; }
         public IImageService ImageService { get; }
+        public IUserService UserService { get; }
 
         public IAdoptionApplicationService AdoptionApplicationService { get; }
         public IAdoptionContractService AdoptionContractService { get; }

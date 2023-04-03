@@ -13,21 +13,24 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         private readonly IAnimalBreedService _animalBreedService;
         private readonly IDonationService _donationService;
         private readonly IImageService _imageService;
+        private readonly IUserService _userService;
+
         private readonly IAdoptionApplicationService _adoptionApplicationService;
         private readonly IAdoptionContractService _adoptionContractService;
         private readonly IManagedAdoptionContractService _managedAdoptionContractService;
 
         public UnitOfWork(
-            AnimalAdoptionContext context, 
-            IAnimalService animalService, 
-            IShelterService shelterService, 
-            IAnimalShelterService animalShelterService, 
-            IAnimalBreedService animalBreedService, 
-            IDonationService donationService, 
-            IImageService imageService, 
-            IAdoptionApplicationService adoptionApplicationService, 
-            IAdoptionContractService adoptionContractService, 
-            IManagedAdoptionContractService managedAdoptionContractService)
+            AnimalAdoptionContext context,
+            IAnimalService animalService,
+            IShelterService shelterService,
+            IAnimalShelterService animalShelterService,
+            IAnimalBreedService animalBreedService,
+            IDonationService donationService,
+            IImageService imageService,
+            IAdoptionApplicationService adoptionApplicationService,
+            IAdoptionContractService adoptionContractService,
+            IManagedAdoptionContractService managedAdoptionContractService,
+            IUserService userService)
         {
             _context = context;
             _animalService = animalService;
@@ -39,6 +42,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             _adoptionApplicationService = adoptionApplicationService;
             _adoptionContractService = adoptionContractService;
             _managedAdoptionContractService = managedAdoptionContractService;
+            _userService = userService;
         }
 
 
@@ -48,6 +52,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         public IAnimalBreedService AnimalBreedService => _animalBreedService;
         public IDonationService DonationService => _donationService;
         public IImageService ImageService => _imageService;
+        public IUserService UserService => _userService;
         public IAdoptionApplicationService AdoptionApplicationService => _adoptionApplicationService;
         public IAdoptionContractService AdoptionContractService => _adoptionContractService;
         public IManagedAdoptionContractService ManagedAdoptionContractService => _managedAdoptionContractService;
