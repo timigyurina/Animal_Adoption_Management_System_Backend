@@ -18,7 +18,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         private readonly IConfiguration _configuration;
 
         private User? _user;
-        private const string _loginProvider =  "AnimalAdoptionManagementSystem";
+        private const string _loginProvider = "AnimalAdoptionManagementSystem";
         private const string _refreshToken = "RefreshToken";
 
         public AuthManager(IMapper mapper, UserManager<User> userManager, ILogger<AuthManager> logger, IConfiguration configuration)
@@ -29,25 +29,13 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             _configuration = configuration;
         }
 
-        public async Task<IEnumerable<IdentityError>> Register(RegisterUserDTO registerUserDTO)
-        {
-            User user = _mapper.Map<User>(registerUserDTO);
-            user.UserName = registerUserDTO.Email;
-            user.IsActive = true;
-
-            IdentityResult result = await _userManager.CreateAsync(user, registerUserDTO.Password);
-
-            if (result.Succeeded)
-                await _userManager.AddToRoleAsync(user, "Adopter");
-
-            return result.Errors;
-        }
-
         public async Task<IEnumerable<IdentityError>> RegisterAs(RegisterUserDTO registerUserDTO, string role)
         {
             User user = _mapper.Map<User>(registerUserDTO);
             user.UserName = registerUserDTO.Email;
             user.IsActive = true;
+            user.IsContactOfShelter = false;
+            user.Shelter = null;
 
             IdentityResult result = await _userManager.CreateAsync(user, registerUserDTO.Password);
 
@@ -86,7 +74,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         {
             await _userManager.RemoveAuthenticationTokenAsync(_user!, _loginProvider, _refreshToken);
             string newRefreshToken = await _userManager.GenerateUserTokenAsync(_user!, _loginProvider, _refreshToken);
-           
+
             IdentityResult result = await _userManager.SetAuthenticationTokenAsync(_user!, _loginProvider, _refreshToken, newRefreshToken);
             return newRefreshToken;
         }
@@ -96,13 +84,13 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
             JwtSecurityToken tokenContent = jwtSecurityTokenHandler.ReadJwtToken(request.Token);
 
-            // search for the username with this token (we set it in GenerateToken)
+            // search for the username with this token
             string? userName = tokenContent.Claims.ToList()
                 .FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sub)?.Value;
             _user = await _userManager.FindByNameAsync(userName);
             if (_user == null || _user.Id != request.UserId)
                 return null;
-            
+
             bool isValidRefreshToken = await _userManager.VerifyUserTokenAsync(_user, _loginProvider, _refreshToken, request.RefreshToken);
 
             if (isValidRefreshToken)

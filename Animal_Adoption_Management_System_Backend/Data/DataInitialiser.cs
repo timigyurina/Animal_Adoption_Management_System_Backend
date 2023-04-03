@@ -17,14 +17,64 @@ namespace Animal_Adoption_Management_System_Backend.Data
 
         public async Task SeedAsync()
         {
-            await SeedSheltersAsync();
+            await SeedSheltersAndEmployeesAsync();
             await SeedAnimalBreedsAsync();
             await SeedAnimalsAsync();
         }
-        private async Task SeedSheltersAsync()
+        private async Task SeedSheltersAndEmployeesAsync()
         {
             if (!_context.Shelters.Any() && _context.Roles.FirstOrDefault(r => r.Name == "ShelterEmployee") != null)
             {
+                Shelter shelter1 = new()
+                {
+                    Name = "Happy Tails Shelter",
+                    Phone = "(555) 123-4567",
+                    Email = "happytails@example.com",
+                    Address = new Address
+                    {
+                        PostalCode = "12345",
+                        Country = "United States",
+                        Region = "New York",
+                        City = "New York City",
+                        AddressLineOne = "123 Main Street",
+                        AddressLineTwo = "Apt 4B"
+                    }
+                };
+                Shelter shelter2 = new()
+                {
+                    Name = "Paws and Claws Rescue",
+                    Phone = "(555) 987-6543",
+                    Email = "pawsandclaws@example.com",
+                    Address = new Address
+                    {
+                        PostalCode = "V6B 4Y8",
+                        Country = "Canada",
+                        Region = "British Columbia",
+                        City = "Vancouver",
+                        AddressLineOne = "456 Granville Street",
+                        AddressLineTwo = "Suite 200"
+                    }
+                };
+                Shelter shelter3 = new()
+                {
+                    Name = "Furry Friends Adoption Center",
+                    Phone = "(555) 555-5555",
+                    Email = "furryfriends@example.com",
+                    Address = new Address
+                    {
+                        PostalCode = "WC2H 9JQ",
+                        Country = "United Kingdom",
+                        Region = "",
+                        City = "London",
+                        AddressLineOne = "10 Downing Street",
+                        AddressLineTwo = "Apt 5"
+                    }
+                };
+
+                await _context.Shelters.AddRangeAsync(shelter1, shelter2, shelter3);
+                await _context.SaveChangesAsync();
+
+
                 User employee1 = new()
                 {
                     Email = "employee@happytails.com",
@@ -35,7 +85,9 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     FirstName = "Employee",
                     LastName = "Happytails",
                     IsActive = true,
-                    DateOfBirth = new DateTime(1980, 2, 2)
+                    DateOfBirth = new DateTime(1980, 2, 2),
+                    IsContactOfShelter = true,
+                    Shelter = shelter1,
                 };
                 User employee2 = new()
                 {
@@ -47,7 +99,9 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     FirstName = "Employee",
                     LastName = "Pawsandclaws",
                     IsActive = true,
-                    DateOfBirth = new DateTime(1985, 3, 3)
+                    DateOfBirth = new DateTime(1985, 3, 3),
+                    IsContactOfShelter = true,
+                    Shelter = shelter2
                 };
                 User employee3 = new()
                 {
@@ -59,7 +113,9 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     FirstName = "Employee",
                     LastName = "Furryfriends",
                     IsActive = true,
-                    DateOfBirth = new DateTime(1990, 4, 4)
+                    DateOfBirth = new DateTime(1990, 4, 4),
+                    IsContactOfShelter = true,
+                    Shelter = shelter3
                 };
 
                 PasswordHasher<User> hasher = new();
@@ -78,59 +134,6 @@ namespace Animal_Adoption_Management_System_Backend.Data
                 await _userManager.AddToRoleAsync(employee2, "ShelterEmployee");
                 await _userManager.AddToRoleAsync(employee3, "ShelterEmployee");
 
-                await _context.SaveChangesAsync();
-
-
-                Shelter shelter1 = new()
-                {
-                    Name = "Happy Tails Shelter",
-                    Phone = "(555) 123-4567",
-                    Email = "happytails@example.com",
-                    Address = new Address
-                    {
-                        PostalCode = "12345",
-                        Country = "United States",
-                        Region = "New York",
-                        City = "New York City",
-                        AddressLineOne = "123 Main Street",
-                        AddressLineTwo = "Apt 4B"
-                    },
-                    ContactPerson = employee1
-                };
-                Shelter shelter2 = new()
-                {
-                    Name = "Paws and Claws Rescue",
-                    Phone = "(555) 987-6543",
-                    Email = "pawsandclaws@example.com",
-                    Address = new Address
-                    {
-                        PostalCode = "V6B 4Y8",
-                        Country = "Canada",
-                        Region = "British Columbia",
-                        City = "Vancouver",
-                        AddressLineOne = "456 Granville Street",
-                        AddressLineTwo = "Suite 200"
-                    },
-                    ContactPerson = employee2
-                };
-                Shelter shelter3 = new()
-                {
-                    Name = "Furry Friends Adoption Center",
-                    Phone = "(555) 555-5555",
-                    Email = "furryfriends@example.com",
-                    Address = new Address
-                    {
-                        PostalCode = "WC2H 9JQ",
-                        Country = "United Kingdom",
-                        Region = "",
-                        City = "London",
-                        AddressLineOne = "10 Downing Street",
-                        AddressLineTwo = "Apt 5"
-                    },
-                    ContactPerson = employee3
-                };
-
-                await _context.Shelters.AddRangeAsync(shelter1, shelter2, shelter3);
                 await _context.SaveChangesAsync();
             }
 
@@ -251,7 +254,7 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     SterilisationDate = new DateTime(2014, 11, 30),
                     BirthDate = new DateTime(2012, 9, 3),
                     Color = AnimalColor.Black,
-                    Notes = "Loved to run and play fetch!",
+                    Notes = "Loves to run and play fetch!",
                     Breed = _context.AnimalBreeds.First(b => b.Type == AnimalType.Dog)
                 };
                 Animal animal4 = new()

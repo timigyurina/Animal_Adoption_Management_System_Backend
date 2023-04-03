@@ -16,7 +16,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         public async Task<IEnumerable<Shelter>> GetFilteredSheltersAsync(string? name, string? contactPersonName, bool? isActive)
         {
             IQueryable<Shelter> shelterQuery = _context.Shelters
-                .Include(s => s.ContactPerson)
+                .Include(s => s.Employees)
                 .AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
@@ -26,8 +26,9 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             if (!string.IsNullOrWhiteSpace(contactPersonName))
             {
                 shelterQuery = shelterQuery
-                    .Where(s => s.ContactPerson!.FirstName.ToLower().Contains(contactPersonName.ToLower()) ||
-                                s.ContactPerson.LastName.ToLower().Contains(contactPersonName.ToLower()));
+                    .Where(s => s.Employees
+                        .Any(e => e.Shelter != null && e.FirstName.ToLower().Contains(contactPersonName.ToLower()) || 
+                                                       e.LastName.ToLower().Contains(contactPersonName.ToLower())));
             }
             if (isActive != null)
             {
@@ -54,24 +55,12 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             return await _context.Shelters
                 .Include(s => s.Address)
-                .Include(s => s.ContactPerson)
+                .Include(s => s.Employees)
                 .Include(s => s.Donations)
                 .Include(s => s.Animals)
                     .ThenInclude(a => a.Animal)
                 .AsNoTracking()
                 .FirstAsync(s => s.Id == id);
-        }
-
-        public async Task<Shelter> TryAddContactPersonToShelter(Shelter shelterToCreate, string? contactPersonId)
-        {
-            User? contactPerson;
-            if (contactPersonId != null)
-                contactPerson = await _context.Users.FirstOrDefaultAsync(u => u.Id == contactPersonId) ?? throw new NotFoundException(typeof(User).Name, contactPersonId);
-            else
-                contactPerson = null;
-
-            shelterToCreate.ContactPerson = contactPerson;
-            return shelterToCreate;
         }
 
         public async Task<Shelter> UpdateShelterIsActive(int id, bool isActive)
@@ -90,7 +79,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             User? contactPerson = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == contactPersonId) ?? throw new NotFoundException(typeof(User).Name, contactPersonId);
 
-            shelterToUpdate.ContactPerson = contactPerson;
             await UpdateAsync(shelterToUpdate);
 
             return shelterToUpdate;
