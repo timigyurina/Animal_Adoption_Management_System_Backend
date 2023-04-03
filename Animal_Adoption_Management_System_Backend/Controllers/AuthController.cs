@@ -1,4 +1,6 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
+using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -13,11 +15,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     {
         private readonly IAuthManager _authManager;
         private readonly ILogger<AuthController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthController(IAuthManager authManager, ILogger<AuthController> logger)
+        public AuthController(IAuthManager authManager, ILogger<AuthController> logger, IUnitOfWork unitOfWork)
         {
             _authManager = authManager;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpPost]
@@ -33,7 +37,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
                 if (response == null)
                     return Unauthorized();
-                
+
                 _logger.LogInformation($"User {loginDTO.Email} has logged in successfully at {DateTime.Now}");
                 return Ok(response);
             }
@@ -52,8 +56,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _logger.LogInformation($"Registration attempt for {registerUserDTO.Email}");
             try
             {
-                IEnumerable<IdentityError> errors = await _authManager.Register(registerUserDTO);
-                if (errors.Any()) 
+                IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "Adopter");
+                if (errors.Any())
                 {
                     foreach (var error in errors)
                     {
@@ -94,7 +98,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                     return BadRequest(ModelState);
                 }
 
-                _logger.LogInformation($"Admin {registerUserDTO.Email} has been registered successfully as an admin at {DateTime.Now}");
+                _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as an Administrator at {DateTime.Now}");
                 return Ok();
             }
             catch (Exception exc)
@@ -103,14 +107,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 return Problem($"Something went wrong in the {nameof(RegisterAdmin)}. Please contact support!", statusCode: 500);
             }
         }
-        
+
         [HttpPost]
         [Authorize(Roles = "Administrator")]
         [Route("registerEmployee")]
-        public async Task<ActionResult> RegisterEmployee(RegisterUserDTO registerUserDTO)
+        public async Task<ActionResult> RegisterEmployee(RegisterShelterEmployeeDTO registerUserDTO)
         {
             _logger.LogInformation($"Employee registration attempt for {registerUserDTO.Email}");
-
+            Shelter shelter = await _unitOfWork.ShelterService.GetAsync(registerUserDTO.ShelterId);
             try
             {
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "ShelterEmployee");
@@ -125,7 +129,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                     return BadRequest(ModelState);
                 }
 
-                _logger.LogInformation($"Admin {registerUserDTO.Email} has been registered successfully as an admin at {DateTime.Now}");
+                // Add User to Shelter as employee
+                await _unitOfWork.UserService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
+
+                _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as a ShelterEmployee at {DateTime.Now}");
                 return Ok();
             }
             catch (Exception exc)

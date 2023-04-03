@@ -58,9 +58,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<ShelterDTO>> CreateShelter(CreateShelterDTO shelterDTO)
         {
             Shelter shelterToCreate = _mapper.Map<Shelter>(shelterDTO);
-            Shelter shelterToCreateWithContactPerson = await _unitOfWork.ShelterService.TryAddContactPersonToShelter(shelterToCreate, shelterDTO.ContactPersonId!);
 
-            Shelter createdShelter = await _unitOfWork.ShelterService.AddAsync(shelterToCreateWithContactPerson);
+            Shelter createdShelter = await _unitOfWork.ShelterService.AddAsync(shelterToCreate);
 
             ShelterDTO createdShelterDTO = _mapper.Map<ShelterDTO>(createdShelter);
             return CreatedAtAction("GetShelter", new { id = createdShelter.Id }, createdShelterDTO);
@@ -93,15 +92,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<ShelterDTO>> UpdateStatus(int id, [FromBody] bool isActive)
         {
             Shelter updatedShelter = await _unitOfWork.ShelterService.UpdateShelterIsActive(id, isActive);
-
-            ShelterDTO updatedShelterDTO = _mapper.Map<ShelterDTO>(updatedShelter);
-            return Ok(updatedShelterDTO);
-        }
-
-        [HttpPut("{id}/updateShelterContactPerson")]
-        public async Task<ActionResult<ShelterDTO>> UpdateContactPerson(int id, [FromBody] string contactPersonId)
-        {
-            Shelter updatedShelter = await _unitOfWork.ShelterService.UpdateShelterContactPerson(id, contactPersonId);
 
             ShelterDTO updatedShelterDTO = _mapper.Map<ShelterDTO>(updatedShelter);
             return Ok(updatedShelterDTO);
