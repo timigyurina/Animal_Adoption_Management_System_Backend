@@ -3,5 +3,7 @@
     public class ImageDTO : BaseImageDTO
     {
         public int Id { get; set; }
+        public DateTime DateTaken { get; set; }
+        public string ImagePath { get; set; }
     }
 }

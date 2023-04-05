@@ -6,9 +6,5 @@ namespace Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs
     {
         [Required]
         public string Description { get; set; }
-        [Required]
-        public string ImagePath { get; set; }
-        [Required]
-        public DateTime DateTaken { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Repositories
@@ -46,9 +47,9 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
 
         public virtual async Task<T> AddAsync(T entity)
         {
-            await _context.AddAsync(entity);
+            EntityEntry<T> entry = await _context.AddAsync(entity);
             await _context.SaveChangesAsync();
-            return entity;
+            return entry.Entity;
         }
 
         public virtual async Task UpdateAsync(T entity)
