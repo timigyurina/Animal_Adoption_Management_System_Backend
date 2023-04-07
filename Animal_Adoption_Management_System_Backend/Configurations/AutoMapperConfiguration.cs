@@ -6,6 +6,7 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.ManagedAdoptionContractDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs;
@@ -53,6 +54,8 @@ namespace Animal_Adoption_Management_System_Backend.Configurations
             CreateMap<AdoptionContract, AdoptionContractDTOWithDetails>().ReverseMap();
             CreateMap<AdoptionContract, CreateAdoptionContractDTO>().ReverseMap();
             CreateMap<AdoptionContract, AdoptionContractDTOWithManagerDetails>().ReverseMap();
+
+            CreateMap<ManagedAdoptionContract, ManagedAdoptionContractDTOWithDetails>().ReverseMap();
 
             CreateMap<Image, ImageDTO>().ReverseMap();
             CreateMap<Image, ImageDTOWithDetails>().ReverseMap();
