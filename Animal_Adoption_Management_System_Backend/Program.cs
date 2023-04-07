@@ -1,3 +1,4 @@
+using Animal_Adoption_Management_System_Backend.Authorization;
 using Animal_Adoption_Management_System_Backend.Configurations;
 using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Middlewares;
@@ -6,6 +7,7 @@ using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Implementations;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +40,7 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
 
 builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 
+builder.Services.AddSingleton<IAuthorizationHandler, AdopterAgeHandler>();
 builder.Services.AddSingleton<IEnumService, EnumService>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
 
@@ -75,6 +78,11 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MinimalAdoptionAge", policy =>
+        policy.Requirements.Add(new AdopterAgeRequirement(20)));
+});
 
 var app = builder.Build();
 
