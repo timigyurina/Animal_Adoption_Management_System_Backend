@@ -68,6 +68,9 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Image> GetWithDetailsAsync(int id)
         {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(Image).Name, id);
+
             return await _context.Images
                 .Include(i => i.Animal)
                 .Include(i => i.Uploader)
