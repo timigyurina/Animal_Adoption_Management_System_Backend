@@ -1,11 +1,12 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
-using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionApplicationDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionContractDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.ManagedAdoptionContractDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
-using Animal_Adoption_Management_System_Backend.Services.Implementations;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
@@ -55,6 +56,54 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             IEnumerable<User> users = await _unitOfWork.UserService.GetFilteredUsersAsync(name, email, isActive, isContactOfShelter, shelterName, bornAfter, bornBefore);
             IEnumerable<UserDTOWithDetails> userDTOs = _mapper.Map<IEnumerable<UserDTOWithDetails>>(users);
             return Ok(userDTOs);
+        }
+
+        [HttpGet("{id}/donation")]
+        public async Task<ActionResult<ICollection<DonationDTOWithDetails>>> GetUserDonations(string id)
+        {
+            User user = await _unitOfWork.UserService.GetWithDonationDetailsAsync(id);
+            UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
+            return Ok(userDTO.Donations);
+        }
+        
+        [HttpGet("{id}/image")]
+        public async Task<ActionResult<ICollection<ImageDTOWithDetails>>> GetUserImages(string id)
+        {
+            User user = await _unitOfWork.UserService.GetWithImageDetailsAsync(id);
+            UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
+            return Ok(userDTO.Images);
+        }  
+        
+        [HttpGet("{id}/shelter")]
+        public async Task<ActionResult<UserDTOWithDetails>> GetUserShelterInfo(string id)
+        {
+            User user = await _unitOfWork.UserService.GetWithShelterDetailsAsync(id);
+            UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
+            return Ok(userDTO);
+        }
+
+        [HttpGet("{id}/adoptionApplication")]
+        public async Task<ActionResult<ICollection<AdoptionApplicationDTOWithDetails>>> GetUserAdoptionApplication(string id)
+        {
+            User user = await _unitOfWork.UserService.GetWithAdoptionApplicationDetailsAsync(id);
+            UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
+            return Ok(userDTO.AdoptionApplications);
+        }
+
+        [HttpGet("{id}/adoptionContract")]
+        public async Task<ActionResult<ICollection<AdoptionContractDTOWithManagerDetails>>> GetUserAdoptionContract(string id)
+        {
+            User user = await _unitOfWork.UserService.GetWithAdoptionContractDetailsAsync(id);
+            UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
+            return Ok(userDTO.AdoptionsContracts);
+        }
+
+        [HttpGet("{id}/managedAdoptionContract")]
+        public async Task<ActionResult<ICollection<ManagedAdoptionContractDTOWithDetails>>> GetUserManagedAdoptionContract(string id)
+        {
+            User user = await _unitOfWork.UserService.GetWithManagedAdoptionContractDetailsAsync(id);
+            UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
+            return Ok(userDTO.ManagedAdoptionsContracts);
         }
 
         [HttpPut("{id}/updateUserIsActive")]

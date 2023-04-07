@@ -54,6 +54,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(animalDTOs);
         }
 
+        [HttpGet("{id}/image")]
+        public async Task<ActionResult<AnimalDTOWithDetails>> GetAnimalImage(int id)
+        {
+            Animal animalWithImages = await _unitOfWork.AnimalService.GetWithImagesAsync(id);
+            AnimalDTOWithDetails animalDTOWithDetails = _mapper.Map<AnimalDTOWithDetails>(animalWithImages);
+            return Ok(animalDTOWithDetails);
+        }
+
         [HttpPost]
         public async Task<ActionResult<AnimalDTO>> CreateAnimal(CreateAnimalDTO animalDTO)
         {
