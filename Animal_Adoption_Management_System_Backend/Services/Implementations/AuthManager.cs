@@ -1,5 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -52,7 +53,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             //_user = await _userManager.FindByEmailAsync(loginUserDTO.Email);
             _user = await _userManager.Users
                 .Include(u => u.Shelter)
-                .FirstOrDefaultAsync(u => u.Email  == loginUserDTO.Email);
+                .FirstOrDefaultAsync(u => u.Email == loginUserDTO.Email);
             bool isValidUser = await _userManager.CheckPasswordAsync(_user, loginUserDTO.Password);
 
             if (_user == null || isValidUser == false)
@@ -125,7 +126,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             List<Claim> claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, _user!.Email),
+                new Claim(JwtRegisteredClaimNames.Sub, _user!.Id),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, _user.Email),
                 new Claim(ClaimTypes.DateOfBirth, _user.DateOfBirth.ToString())
@@ -137,7 +138,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 Claim shelterClaim = new Claim("ShelterId", _user.Shelter.Id.ToString());
                 claims.Add(shelterClaim);
             }
-
 
             JwtSecurityToken token = new JwtSecurityToken(
                     issuer: _configuration["JwtSettings:Issuer"],
