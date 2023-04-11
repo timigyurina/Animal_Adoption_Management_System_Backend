@@ -65,15 +65,15 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.Donations);
         }
-        
+
         [HttpGet("{id}/image")]
         public async Task<ActionResult<ICollection<ImageDTOWithDetails>>> GetUserImages(string id)
         {
             User user = await _unitOfWork.UserService.GetWithImageDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.Images);
-        }  
-        
+        }
+
         [HttpGet("{id}/shelter")]
         public async Task<ActionResult<UserDTOWithDetails>> GetUserShelterInfo(string id)
         {

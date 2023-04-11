@@ -1,8 +1,10 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Authorization;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,15 +12,18 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ShelterController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPermissionChecker _permissionChecker;
 
-        public ShelterController(IUnitOfWork unitOfWork, IMapper mapper)
+        public ShelterController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _permissionChecker = permissionChecker;
         }
 
         [HttpGet]
@@ -39,8 +44,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpGet("{id}/details")]
+        //[ShelterIdAuthorize("{id}")]
         public async Task<ActionResult<ShelterDTOWithDetails>> GetShelterWithDetails(int id)
         {
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
             Shelter shelterWithDetails = await _unitOfWork.ShelterService.GetWithDetailsAsync(id);
             ShelterDTOWithDetails shelterDTOWithDetails = _mapper.Map<ShelterDTOWithDetails>(shelterWithDetails);
             return Ok(shelterDTOWithDetails);
@@ -55,6 +62,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<ShelterDTO>> CreateShelter(CreateShelterDTO shelterDTO)
         {
             Shelter shelterToCreate = _mapper.Map<Shelter>(shelterDTO);
@@ -66,6 +74,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         public async Task<ActionResult<ShelterDTO>> UpdateShelterContactInfo(int id, UpdateShelterContactInfoDTO shelterDTO)
         {
             Shelter shelterToUpdate = await _unitOfWork.ShelterService.GetWithAddressAsync(id);
@@ -89,8 +98,11 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpPut("{id}/updateShelterIsActive")]
+        [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<ShelterDTO>> UpdateStatus(int id, [FromBody] bool isActive)
         {
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
+
             Shelter updatedShelter = await _unitOfWork.ShelterService.UpdateShelterIsActive(id, isActive);
 
             ShelterDTO updatedShelterDTO = _mapper.Map<ShelterDTO>(updatedShelter);
@@ -98,6 +110,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> DeleteShelter(int id)
         {
             await _unitOfWork.ShelterService.DeleteAsync(id);

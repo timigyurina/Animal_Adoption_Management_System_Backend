@@ -1,25 +1,31 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionApplicationDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Authorization;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionApplicationDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AdoptionApplicationController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPermissionChecker _permissionChecker;
 
-        public AdoptionApplicationController(IUnitOfWork unitOfWork, IMapper mapper)
+        public AdoptionApplicationController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _permissionChecker = permissionChecker;
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AdoptionApplicationDTO>>> GetAllAdoptionApplications()
         {
@@ -40,13 +46,17 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<AdoptionApplicationDTOWithDetails>> GetAdoptionApplicationWithDetails(int id)
         {
-            AdoptionApplication adoptionApplicationWithDetails = await _unitOfWork.AdoptionApplicationService.GetWithDetailsAsync(id);
+            // Check if User is Applier of this AdApp or Employee at the Shelter of the Animal 
+            AdoptionApplication adoptionApplicationWithDetails = await _unitOfWork.AdoptionApplicationService.GetWithAnimalShelterDetailsAsync(id);
+            _permissionChecker.CheckPermissionForAdoptionApplication(adoptionApplicationWithDetails, HttpContext.User);
+
             AdoptionApplicationDTOWithDetails adoptionApplicationDTOWithDetails = _mapper.Map<AdoptionApplicationDTOWithDetails>(adoptionApplicationWithDetails);
             return Ok(adoptionApplicationDTOWithDetails);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<AdoptionApplicationDTOWithDetails>>> GetFilteredAdoptionApplications(string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status)
+        public async Task<ActionResult<IEnumerable<AdoptionApplicationDTO>>> GetFilteredAdoptionApplications(string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status)
         {
             IEnumerable<AdoptionApplication> adoptionApplications = await _unitOfWork.AdoptionApplicationService.GetFilteredAdoptionApplicationsAsync(animalName, applierName, dateAfter, dateBefore, status);
             IEnumerable<AdoptionApplicationDTOWithDetails> adoptionApplicationDTOs = _mapper.Map<IEnumerable<AdoptionApplicationDTOWithDetails>>(adoptionApplications);
@@ -54,6 +64,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "MinimalAdoptionAge")]
         public async Task<ActionResult<AdoptionApplicationDTO>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)
         {
             AdoptionApplication adoptionApplicationToCreate = _mapper.Map<AdoptionApplication>(applicationDTO);
@@ -65,15 +76,19 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetAdoptionApplication", new { id = createdAdoptionApplication.Id }, createdAdoptionApplicationDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}/updateAdoptionApplicationStatus")]
         public async Task<ActionResult<AdoptionApplicationDTO>> UpdateStatus(int id, [FromBody] ApplicationStatus newStatus)
         {
-            AdoptionApplication updatedAdoptionApplication = await _unitOfWork.AdoptionApplicationService.UpdateAdoptionApplicationStatus(id, newStatus);
+            AdoptionApplication adoptionApplicationWithDetails = await _unitOfWork.AdoptionApplicationService.GetWithAnimalShelterDetailsAsync(id);
+            _permissionChecker.CheckPermissionForAdoptionApplication(adoptionApplicationWithDetails, HttpContext.User);
 
+            AdoptionApplication updatedAdoptionApplication = await _unitOfWork.AdoptionApplicationService.UpdateAdoptionApplicationStatus(id, newStatus);
             AdoptionApplicationDTO updatedAdoptionApplicationDTO = _mapper.Map<AdoptionApplicationDTO>(updatedAdoptionApplication);
             return Ok(updatedAdoptionApplicationDTO);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdoptionApplication(int id)
         {
