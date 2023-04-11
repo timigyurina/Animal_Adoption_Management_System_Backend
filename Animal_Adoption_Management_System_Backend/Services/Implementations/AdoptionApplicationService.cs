@@ -27,10 +27,10 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         }
 
         public async Task<IEnumerable<AdoptionApplication>> GetFilteredAdoptionApplicationsAsync(
-            string? animalName, 
-            string? applierName, 
-            DateTime? dateAfter, 
-            DateTime? dateBefore, 
+            string? animalName,
+            string? applierName,
+            DateTime? dateAfter,
+            DateTime? dateBefore,
             ApplicationStatus? status)
         {
             IQueryable<AdoptionApplication> adoptionApplicationQuery = _context.AdoptionApplications
@@ -108,6 +108,20 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             if (_context.AdoptionApplications.Any(a => a.Animal == entity.Animal && a.Applier == entity.Applier && a.Status == ApplicationStatus.Submitted))
                 throw new BadRequestException("Adoption Application for this User and Animal has been already submitted");
             return base.AddAsync(entity);
+        }
+
+        public async Task<AdoptionApplication> GetWithAnimalShelterDetailsAsync(int id)
+        {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(AdoptionApplication).Name, id);
+
+            return await _context.AdoptionApplications
+            .Include(a => a.Animal)
+                .ThenInclude(animal => animal.AnimalShelters)
+                    .ThenInclude(animalS => animalS.Shelter)
+            .Include(a => a.Applier)
+            .AsNoTracking()
+            .FirstAsync(a => a.Id == id);
         }
     }
 }

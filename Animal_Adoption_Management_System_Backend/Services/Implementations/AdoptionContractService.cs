@@ -83,5 +83,18 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             return adoptionContract;
         }
+
+        public async Task<AdoptionContract> GetWithAnimalShelterDetailsAsync(int id)
+        {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(AdoptionContract).Name, id);
+            return await _context.AdoptionContracts
+                .Include(a => a.Animal)
+                    .ThenInclude(animal => animal.AnimalShelters)
+                        .ThenInclude(animalS => animalS.Shelter)
+                .Include(a => a.Applier)
+                .AsNoTracking()
+                .FirstAsync(a => a.Id == id);
+        }
     }
 }

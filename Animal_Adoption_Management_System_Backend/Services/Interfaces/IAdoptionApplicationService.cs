@@ -11,5 +11,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task<AdoptionApplication> TryAddAnimalAndApplierToAdoptionApplication(AdoptionApplication adoptionApplicationToCreate, int animalId, string applierId);
         Task<AdoptionApplication> UpdateAdoptionApplicationStatus(int id, ApplicationStatus newStatus);
         Task SetAdoptionApplicationStatusForContractCreation(Animal animal, User applier);
+
+        Task<AdoptionApplication> GetWithAnimalShelterDetailsAsync(int id);
     }
 }
