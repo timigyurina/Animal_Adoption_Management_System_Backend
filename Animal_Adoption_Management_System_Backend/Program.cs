@@ -43,6 +43,7 @@ builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 builder.Services.AddSingleton<IAuthorizationHandler, AdopterAgeHandler>();
 builder.Services.AddSingleton<IEnumService, EnumService>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
+builder.Services.AddScoped<IPermissionChecker, PermissionChecker>();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAnimalBreedService, AnimalBreedService>();
