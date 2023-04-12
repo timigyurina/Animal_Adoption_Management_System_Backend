@@ -126,10 +126,11 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             List<Claim> claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, _user!.Id),
+                new Claim(JwtRegisteredClaimNames.Sub, _user!.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, _user.Email),
-                new Claim(ClaimTypes.DateOfBirth, _user.DateOfBirth.ToString())
+                new Claim(ClaimTypes.DateOfBirth, _user.DateOfBirth.ToString()),
+                new Claim("UserId", _user.Id),
             }
             .Union(roleClaims).ToList();
 
