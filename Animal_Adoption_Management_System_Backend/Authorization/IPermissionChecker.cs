@@ -8,5 +8,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
         void CheckPermissionForShelter(int id, ClaimsPrincipal user);
         void CheckPermissionForAdoptionApplication(AdoptionApplication adoptionApplication, ClaimsPrincipal user);
         void CheckPermissionForAdoptionContract(AdoptionContract adoptionContract, ClaimsPrincipal user);
+        void CheckPermissionForAnimal(Animal animalWithDetails, ClaimsPrincipal user);
+        void CheckPermissionForUserRelatedEntity(string userIdOfRelatedEntity, ClaimsPrincipal user, string entityType);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Services.Implementations;
-using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -18,7 +17,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
 
         public void CheckPermissionForShelter(int id, ClaimsPrincipal user)
         {
-            _logger.LogWarning($"Evaluating authorization requirement for ShelterId == {id}");
+            _logger.LogWarning($"Evaluating authorization requirement for Shelter with id {id}");
 
             if (user.IsInRole("Administrator"))
             {
@@ -32,7 +31,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             {
                 if (shelterIdClaim.Value == id.ToString())
                 {
-                    _logger.LogInformation("Employee's ShelterId claim equals requested ShelterId");
+                    _logger.LogInformation("Employee's ShelterId claim equals requested Shelter's id");
                     return;
                 }
                 else
@@ -45,6 +44,38 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 _logger.LogInformation("No ShelterId claim present");
             }
             throw new ForbiddenException($"Shelter");
+        }
+
+        public void CheckPermissionForAnimal(Animal animalWithDetails, ClaimsPrincipal user)
+        {
+            _logger.LogWarning($"Evaluating authorization requirement for Animal with id {animalWithDetails.Id}");
+
+            if (user.IsInRole("Administrator"))
+            {
+                _logger.LogInformation("Admin request for Animal");
+                return;
+            }
+
+            Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
+
+            if (shelterIdClaim != null)
+            {
+                int idOfLatestShelter = GetLatestShelterIdOfAnimal(animalWithDetails);
+                if (shelterIdClaim.Value == idOfLatestShelter.ToString())
+                {
+                    _logger.LogInformation("Employee's ShelterId claim equals requested Animal's ShelterId");
+                    return;
+                }
+                else
+                {
+                    _logger.LogInformation($"Current user's ShelterId claim ({shelterIdClaim.Value}) does not satisfy the ShelterId authorization requirement {idOfLatestShelter}");
+                }
+            }
+            else
+            {
+                _logger.LogInformation("No ShelterId claim present");
+            }
+            throw new ForbiddenException($"Animal");
         }
 
         public void CheckPermissionForAdoptionApplication(AdoptionApplication adoptionApplication, ClaimsPrincipal user)
@@ -83,7 +114,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             }
 
             Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
-            Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub);
+            Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == "UserId");
 
             if (shelterIdClaim != null)
             {
@@ -97,19 +128,38 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             throw new ForbiddenException($"AdoptionContract");
         }
 
+        public void CheckPermissionForUserRelatedEntity(string userIdOfRelatedEntity, ClaimsPrincipal user, string entityType)
+        {
+            _logger.LogWarning($"Evaluating authorization requirement for User-related {entityType} entity");
+
+            if (user.IsInRole("Administrator"))
+            {
+                _logger.LogInformation($"Admin request for {entityType}, approved");
+                return;
+            }
+
+
+            Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == "UserId");
+            if (identityClaim != null)
+            {
+                if (identityClaim.Value == userIdOfRelatedEntity)
+                {
+                    _logger.LogInformation($"User's identity claim equals the owner's id of the requested {entityType}.");
+                    return;
+                }
+                else 
+                    _logger.LogInformation($"User identity of {identityClaim.Value} does not equal the owner's id ({userIdOfRelatedEntity}) of the requested {entityType}.");
+            }
+            else 
+                _logger.LogInformation("No UserId claim present");
+
+            throw new ForbiddenException($"other User's {entityType}(s)");
+        }
+
+
         private void HandlePermissionIfEmployee(Animal animal, string shelterIdClaimValue)
         {
-            int shelterIdOfAnimalInAdoptionApplication;
-            AnimalShelter? currentAnimalShelterConnection = animal.AnimalShelters.FirstOrDefault(animalS => animalS.ExitDate == null);
-            if (currentAnimalShelterConnection == null)
-            {
-                shelterIdOfAnimalInAdoptionApplication = animal.AnimalShelters
-                    .Aggregate((latest, curr) => latest.ExitDate > curr.ExitDate ? latest : curr).Shelter.Id;
-            }
-            else
-            {
-                shelterIdOfAnimalInAdoptionApplication = currentAnimalShelterConnection.Shelter.Id;
-            }
+            int shelterIdOfAnimalInAdoptionApplication = GetLatestShelterIdOfAnimal(animal);
 
             if (shelterIdClaimValue == shelterIdOfAnimalInAdoptionApplication.ToString())
             {
@@ -132,5 +182,19 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 return;
             }
         }
+
+        private int GetLatestShelterIdOfAnimal(Animal animalWithDetails)
+        {
+            int shelterId;
+            AnimalShelter? currentAnimalShelterConnection = animalWithDetails.AnimalShelters.FirstOrDefault(animalS => animalS.ExitDate == null);
+            if (currentAnimalShelterConnection == null)
+                shelterId = animalWithDetails.AnimalShelters
+                    .Aggregate((latest, curr) => latest.ExitDate > curr.ExitDate ? latest : curr).Shelter.Id;
+            else
+                shelterId = currentAnimalShelterConnection.Shelter.Id;
+
+            return shelterId;
+        }
+
     }
 }
