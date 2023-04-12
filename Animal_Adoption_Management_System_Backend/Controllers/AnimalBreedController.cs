@@ -4,11 +4,13 @@ using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AnimalBreedController : ControllerBase
@@ -48,6 +50,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(breedDTOs);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPost]
         public async Task<ActionResult<AnimalBreedDTO>> CreateBreed(CreateAnimalBreedDTO animalBreedDTO)
         {
@@ -58,6 +61,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetBreed", new { id = createdBreed.Id }, createdBreedDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}")]
         public async Task<ActionResult<AnimalBreedDTO>> UpdateBreed(int id, CreateAnimalBreedDTO animalBreedDTO)
         {
@@ -81,6 +85,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(updatedBreed);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBreed(int id)
         {

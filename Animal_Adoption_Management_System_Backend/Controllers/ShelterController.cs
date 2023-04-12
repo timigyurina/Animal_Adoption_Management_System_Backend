@@ -10,9 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class ShelterController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -61,8 +61,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(shelterDTOs);
         }
 
-        [HttpPost]
         [Authorize(Roles = "Administrator")]
+        [HttpPost]
         public async Task<ActionResult<ShelterDTO>> CreateShelter(CreateShelterDTO shelterDTO)
         {
             Shelter shelterToCreate = _mapper.Map<Shelter>(shelterDTO);
@@ -73,10 +73,11 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetShelter", new { id = createdShelter.Id }, createdShelterDTO);
         }
 
-        [HttpPut("{id}")]
         [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpPut("{id}/updateShelterContactInfo")]
         public async Task<ActionResult<ShelterDTO>> UpdateShelterContactInfo(int id, UpdateShelterContactInfoDTO shelterDTO)
         {
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User); 
             Shelter shelterToUpdate = await _unitOfWork.ShelterService.GetWithAddressAsync(id);
 
             _mapper.Map(shelterDTO, shelterToUpdate);
@@ -97,8 +98,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(updatedShelter);
         }
 
-        [HttpPut("{id}/updateShelterIsActive")]
         [Authorize(Roles = "Administrator")]
+        [HttpPut("{id}/updateShelterIsActive")]
         public async Task<ActionResult<ShelterDTO>> UpdateStatus(int id, [FromBody] bool isActive)
         {
             _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
@@ -109,8 +110,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(updatedShelterDTO);
         }
 
-        [HttpDelete("{id}")]
         [Authorize(Roles = "Administrator")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteShelter(int id)
         {
             await _unitOfWork.ShelterService.DeleteAsync(id);
