@@ -69,12 +69,16 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(adoptionContractDTOs);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPost]
         public async Task<ActionResult<AdoptionContractDTO>> CreateAdoptionContract(CreateAdoptionContractDTO contractDTO)
         {
             AdoptionContract adoptionContractToCreate = _mapper.Map<AdoptionContract>(contractDTO);
 
             AdoptionContract adoptionContractToCreateWithRelations = await _unitOfWork.AdoptionContractService.TryAddRelatedEntitiesToAdoptionContract(adoptionContractToCreate, contractDTO.AnimalId, contractDTO.ApplierId);
+            
+            _permissionChecker.CheckPermissionForAnimal(adoptionContractToCreateWithRelations.Animal, User);
+
             // check for existing AdoptionApplication and set its Status to approved
             await _unitOfWork.AdoptionApplicationService.SetAdoptionApplicationStatusForContractCreation(adoptionContractToCreateWithRelations.Animal, adoptionContractToCreateWithRelations.Applier);
 

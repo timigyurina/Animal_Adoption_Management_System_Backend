@@ -62,11 +62,15 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         public async Task<AdoptionContract> TryAddRelatedEntitiesToAdoptionContract(AdoptionContract adoptionContractToCreate, int animalId, string applierId)
         {
             Animal animal = await _context.Animals
+                .Include(a => a.AnimalShelters)
+                    .ThenInclude(s => s.Shelter)
                 .FirstOrDefaultAsync(a => a.Id == animalId) ?? throw new NotFoundException(typeof(Animal).Name, animalId);
-            User applier = await _context.Users
-                .FirstOrDefaultAsync(a => a.Id == applierId) ?? throw new NotFoundException($"{typeof(User).Name} (applier)", applierId);
+
             if (animal.Status != AnimalStatus.WaitingForAdoption)
                 throw new BadRequestException($"Animal with id {animalId} is not adoptable");
+
+            User applier = await _context.Users
+                .FirstOrDefaultAsync(a => a.Id == applierId) ?? throw new NotFoundException($"{typeof(User).Name} (applier)", applierId);
 
             adoptionContractToCreate.Animal = animal;
             adoptionContractToCreate.Applier = applier;
