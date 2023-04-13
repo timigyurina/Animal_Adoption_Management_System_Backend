@@ -11,5 +11,6 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
         void CheckPermissionForAnimal(Animal animalWithDetails, ClaimsPrincipal user);
         void CheckPermissionForUserRelatedEntity(string userIdOfRelatedEntity, ClaimsPrincipal user, string entityType);
         void CheckPermissionForDonation(Donation donationWithDetails, ClaimsPrincipal user);
+        void CheckPermissionForImage(Image imageWithDetails, ClaimsPrincipal user);
     }
 }

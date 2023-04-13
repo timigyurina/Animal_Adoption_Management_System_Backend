@@ -176,6 +176,26 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             throw new ForbiddenException($"Donation");
         }
 
+        public void CheckPermissionForImage(Image imageWithDetails, ClaimsPrincipal user)
+        {
+            _logger.LogWarning($"Evaluating authorization requirement for Image with id {imageWithDetails.Id}");
+
+            if (user.IsInRole("Administrator"))
+            {
+                _logger.LogInformation("Admin request for Image");
+                return;
+            }
+
+            Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
+            if (shelterIdClaim != null)
+            {
+                int shelterIdOfAnimalInImage = GetLatestShelterIdOfAnimal(imageWithDetails.Animal);
+                bool isAuthorizedEmployee = HandlePermissionIfEmployee(shelterIdOfAnimalInImage, shelterIdClaim.Value, "Image");
+                if (isAuthorizedEmployee) return;
+            }
+            throw new ForbiddenException($"Image");
+        }
+
 
         private bool HandlePermissionIfEmployee(int IdToCheck, string shelterIdClaimValue, string entityType)
         {
