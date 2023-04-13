@@ -1,7 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Services.Implementations;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Authorization
@@ -78,9 +77,9 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             throw new ForbiddenException($"Animal");
         }
 
-        public void CheckPermissionForAdoptionApplication(AdoptionApplication adoptionApplication, ClaimsPrincipal user)
+        public void CheckPermissionForAdoptionApplication(AdoptionApplication adoptionApplicationWithDetails, ClaimsPrincipal user)
         {
-            _logger.LogWarning($"Evaluating authorization requirement for AdoptionApplication with id {adoptionApplication.Id}");
+            _logger.LogWarning($"Evaluating authorization requirement for AdoptionApplication with id {adoptionApplicationWithDetails.Id}");
 
             if (user.IsInRole("Administrator"))
             {
@@ -88,24 +87,25 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 return;
             }
 
+            Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == "UserId");
             Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
-            Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub);
-
+            if (identityClaim != null)
+            {
+                bool isOwner = HandlePermissionIfOwnerOfEntity(adoptionApplicationWithDetails.Applier.Id, identityClaim.Value, "AdoptionApplication");
+                if (isOwner) return;
+            }
             if (shelterIdClaim != null)
             {
-                HandlePermissionIfEmployee(adoptionApplication.Animal, shelterIdClaim.Value);
-                return;
-            }
-            else if (identityClaim != null)
-            {
-                HandlePermissionIfAdopter(adoptionApplication.Applier.Id, identityClaim.Value);
+                int shelterIdOfAnimalInAdoptionApplication = GetLatestShelterIdOfAnimal(adoptionApplicationWithDetails.Animal);
+                bool isAuthorizedEmployee = HandlePermissionIfEmployee(shelterIdOfAnimalInAdoptionApplication, shelterIdClaim.Value, "AdoptionApplication");
+                if (isAuthorizedEmployee) return;
             }
             throw new ForbiddenException($"AdoptionApplication");
         }
 
-        public void CheckPermissionForAdoptionContract(AdoptionContract adoptionContract, ClaimsPrincipal user)
+        public void CheckPermissionForAdoptionContract(AdoptionContract adoptionContractWithDetails, ClaimsPrincipal user)
         {
-            _logger.LogWarning($"Evaluating authorization requirement for AdoptionContract with id {adoptionContract.Id}");
+            _logger.LogWarning($"Evaluating authorization requirement for AdoptionContract with id {adoptionContractWithDetails.Id}");
 
             if (user.IsInRole("Administrator"))
             {
@@ -113,17 +113,18 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 return;
             }
 
-            Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
             Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == "UserId");
-
+            Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
+            if (identityClaim != null)
+            {
+                bool isOwner = HandlePermissionIfOwnerOfEntity(adoptionContractWithDetails.Applier.Id, identityClaim.Value, "AdoptionContract");
+                if (isOwner) return;
+            }
             if (shelterIdClaim != null)
             {
-                HandlePermissionIfEmployee(adoptionContract.Animal, shelterIdClaim.Value);
-                return;
-            }
-            else if (identityClaim != null)
-            {
-                HandlePermissionIfAdopter(adoptionContract.Applier.Id, identityClaim.Value);
+                int shelterIdOfAnimalInAdoptionContract = GetLatestShelterIdOfAnimal(adoptionContractWithDetails.Animal);
+                bool isAuthorizedEmployee = HandlePermissionIfEmployee(shelterIdOfAnimalInAdoptionContract, shelterIdClaim.Value, "AdoptionContract");
+                if (isAuthorizedEmployee) return;
             }
             throw new ForbiddenException($"AdoptionContract");
         }
@@ -138,49 +139,65 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 return;
             }
 
-
             Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == "UserId");
             if (identityClaim != null)
             {
-                if (identityClaim.Value == userIdOfRelatedEntity)
-                {
-                    _logger.LogInformation($"User's identity claim equals the owner's id of the requested {entityType}.");
-                    return;
-                }
-                else 
-                    _logger.LogInformation($"User identity of {identityClaim.Value} does not equal the owner's id ({userIdOfRelatedEntity}) of the requested {entityType}.");
+                bool isOwner = HandlePermissionIfOwnerOfEntity(userIdOfRelatedEntity, identityClaim.Value, entityType);
+                if (isOwner) return;
             }
-            else 
+            else
                 _logger.LogInformation("No UserId claim present");
 
             throw new ForbiddenException($"other User's {entityType}(s)");
         }
 
-
-        private void HandlePermissionIfEmployee(Animal animal, string shelterIdClaimValue)
+        public void CheckPermissionForDonation(Donation donationWithDetails, ClaimsPrincipal user)
         {
-            int shelterIdOfAnimalInAdoptionApplication = GetLatestShelterIdOfAnimal(animal);
+            _logger.LogWarning($"Evaluating authorization requirement for Donation with id {donationWithDetails.Id}");
 
-            if (shelterIdClaimValue == shelterIdOfAnimalInAdoptionApplication.ToString())
+            if (user.IsInRole("Administrator"))
             {
-                _logger.LogInformation("Employee's ShelterId claim equals the ShelterId of requested AdoptionApplication/AdoptionContract's Animal");
+                _logger.LogInformation("Admin request for Donation");
                 return;
             }
-            else
+
+            Claim? identityClaim = user.Claims.FirstOrDefault(c => c.Type == "UserId");
+            Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
+            if (identityClaim != null)
             {
-                _logger.LogInformation($"Current user's ShelterId claim ({shelterIdClaimValue}) does not equal the ShelterId of this AdoptionApplication ({shelterIdOfAnimalInAdoptionApplication})");
-                throw new ForbiddenException($"AdoptionApplication/AdoptionContract");
+                bool isOwner = HandlePermissionIfOwnerOfEntity(donationWithDetails.Donator.Id, identityClaim.Value, "Donation");
+                if (isOwner) return;
             }
+            if (shelterIdClaim != null)
+            {
+                bool isAuthorizedEmployee = HandlePermissionIfEmployee(donationWithDetails.Shelter.Id, shelterIdClaim.Value, "Donation");
+                if (isAuthorizedEmployee) return;
+            }
+            throw new ForbiddenException($"Donation");
         }
-        private void HandlePermissionIfAdopter(string applierId, string identityClaimValue)
-        {
-            _logger.LogInformation("No ShelterId claim present, checking if User is Applier of requested AdoptionApplication/AdoptionContract");
 
-            if (applierId == identityClaimValue)
+
+        private bool HandlePermissionIfEmployee(int IdToCheck, string shelterIdClaimValue, string entityType)
+        {
+            _logger.LogWarning($"Checking if Employee's ShelterId claim equals the ShelterId of requested {entityType}");
+            if (shelterIdClaimValue == IdToCheck.ToString())
             {
-                _logger.LogInformation("User's identity claim equals the ApplierId of requested AdoptionApplication/AdoptionContract");
-                return;
+                _logger.LogInformation($"Employee authorized for requested {entityType}");
+                return true;
             }
+            _logger.LogInformation($"Current Employee's ShelterId claim ({shelterIdClaimValue}) does not equal the ShelterId of this {entityType} ({IdToCheck})");
+            return false;
+        }
+        private bool HandlePermissionIfOwnerOfEntity(string idToCheck, string identityClaimValue, string entityType)
+        {
+            _logger.LogWarning($"Checking if the requested {entityType} belongs to User");
+            if (idToCheck == identityClaimValue)
+            {
+                _logger.LogInformation($"User's identity claim does not authorize viewing the requested {entityType}");
+                return true;
+            }
+            _logger.LogInformation($"Current {entityType} does not belong to User ({idToCheck})");
+            return false;
         }
 
         private int GetLatestShelterIdOfAnimal(Animal animalWithDetails)
@@ -195,6 +212,5 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
 
             return shelterId;
         }
-
     }
 }
