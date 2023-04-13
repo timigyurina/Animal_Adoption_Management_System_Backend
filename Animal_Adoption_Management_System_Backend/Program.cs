@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -84,6 +85,13 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("MinimalAge", policy =>
         policy.Requirements.Add(new AgeRequirement(20)));
 });
+// Serilog configuration
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+builder.Logging.AddSerilog(logger);
+
 
 var app = builder.Build();
 
