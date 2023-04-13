@@ -1,11 +1,10 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Authorization;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
@@ -29,7 +28,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult> Login([FromBody] LoginUserDTO loginDTO)
         {
             _logger.LogInformation($"Login attempt for {loginDTO.Email}");
-
             try
             {
                 AuthResponseDTO? response = await _authManager.Login(loginDTO);
@@ -62,11 +60,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                     foreach (var error in errors)
                     {
                         ModelState.AddModelError(error.Code, error.Description);
-                        Console.WriteLine(error.Code);
                     }
                     return BadRequest(ModelState);
                 }
-
                 _logger.LogInformation($"User {registerUserDTO.Email} has registered successfully at {DateTime.Now}");
                 return Ok();
             }
@@ -92,12 +88,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                     foreach (var error in errors)
                     {
                         ModelState.AddModelError(error.Code, error.Description);
-                        Console.WriteLine(error.Code);
                     }
-
                     return BadRequest(ModelState);
                 }
-
                 _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as an Administrator at {DateTime.Now}");
                 return Ok();
             }
@@ -123,12 +116,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                     foreach (var error in errors)
                     {
                         ModelState.AddModelError(error.Code, error.Description);
-                        Console.WriteLine(error.Code);
                     }
-
                     return BadRequest(ModelState);
                 }
-
                 // Add User to Shelter as employee
                 await _unitOfWork.UserService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
 

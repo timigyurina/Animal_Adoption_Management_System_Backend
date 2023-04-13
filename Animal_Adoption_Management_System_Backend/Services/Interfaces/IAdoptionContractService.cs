@@ -9,5 +9,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task<AdoptionContract> GetWithDetailsAsync(int id);
         Task<AdoptionContract> TryAddRelatedEntitiesToAdoptionContract(AdoptionContract adoptionContractToCreate, int animalId, string applierId);
         Task<AdoptionContract> UpdateAdoptionContractIsActive(int id, bool isActive);
+
+        Task<AdoptionContract> GetWithAnimalShelterDetailsAsync(int id);
     }
 }

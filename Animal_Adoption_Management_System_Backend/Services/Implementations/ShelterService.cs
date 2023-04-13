@@ -60,6 +60,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .Include(s => s.Animals)
                     .ThenInclude(a => a.Animal)
                 .AsNoTracking()
+                .AsSplitQuery()
                 .FirstAsync(s => s.Id == id);
         }
 

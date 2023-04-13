@@ -20,6 +20,11 @@ namespace Animal_Adoption_Management_System_Backend.Middlewares
             {
                 await _next(context);
             }
+            catch (IException exc)
+            {
+                _logger.LogError(exc, $"Something went wrong while processing {context.Request.Path}");
+                await HandleExceptionAsync(context, exc);
+            }
             catch (Exception exc)
             {
                 _logger.LogError(exc, $"Something went wrong while processing {context.Request.Path}");
@@ -37,22 +42,21 @@ namespace Animal_Adoption_Management_System_Backend.Middlewares
                 ErrorMessage = exc.Message,
             };
 
-            switch (exc)
-            {
-                case NotFoundException:
-                    statusCode = HttpStatusCode.NotFound;
-                    errorDetails.ErrorType = "Not found";
-                    break;
-                case BadRequestException:
-                    statusCode = HttpStatusCode.BadRequest;
-                    errorDetails.ErrorType = "Bad Request";
-                    break;
-                default:
-                    break;
-            }
-
             string response = JsonConvert.SerializeObject(errorDetails);
             context.Response.StatusCode = (int)statusCode;
+            return context.Response.WriteAsync(response);
+        }
+        private Task HandleExceptionAsync(HttpContext context, IException exc)
+        {
+            context.Response.ContentType = "application/json";
+            ErrorDetails errorDetails = new()
+            {
+                ErrorType = exc.ErrorType,
+                ErrorMessage = exc.Message,
+            };
+
+            string response = JsonConvert.SerializeObject(errorDetails);
+            context.Response.StatusCode = (int)exc.StatusCode;
             return context.Response.WriteAsync(response);
         }
     }

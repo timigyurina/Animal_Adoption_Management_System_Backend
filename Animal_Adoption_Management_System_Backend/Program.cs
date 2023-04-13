@@ -1,3 +1,4 @@
+using Animal_Adoption_Management_System_Backend.Authorization;
 using Animal_Adoption_Management_System_Backend.Configurations;
 using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Middlewares;
@@ -6,9 +7,11 @@ using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Implementations;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,8 +41,10 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
 
 builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 
+builder.Services.AddSingleton<IAuthorizationHandler, AgeHandler>();
 builder.Services.AddSingleton<IEnumService, EnumService>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
+builder.Services.AddScoped<IPermissionChecker, PermissionChecker>();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAnimalBreedService, AnimalBreedService>();
@@ -74,6 +79,18 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
     };
 });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MinimalAge", policy =>
+        policy.Requirements.Add(new AgeRequirement(20)));
+});
+// Serilog configuration
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+builder.Logging.AddSerilog(logger);
 
 
 var app = builder.Build();

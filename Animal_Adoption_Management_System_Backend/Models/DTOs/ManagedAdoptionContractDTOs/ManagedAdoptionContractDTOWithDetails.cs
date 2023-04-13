@@ -7,7 +7,7 @@ namespace Animal_Adoption_Management_System_Backend.Models.DTOs.ManagedAdoptionC
     {
         public int Id { get; set; }
 
-        public AdoptionContractDTO Contract { get; set; }
+        public AdoptionContractDTOWithDetails Contract { get; set; }
         public UserDTO Manager { get; set; }
     }
 }

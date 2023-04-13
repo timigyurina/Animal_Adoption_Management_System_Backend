@@ -30,6 +30,7 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     Name = "Happy Tails Shelter",
                     Phone = "(555) 123-4567",
                     Email = "happytails@example.com",
+                    IsActive = true,
                     Address = new Address
                     {
                         PostalCode = "12345",
@@ -45,6 +46,7 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     Name = "Paws and Claws Rescue",
                     Phone = "(555) 987-6543",
                     Email = "pawsandclaws@example.com",
+                    IsActive = true,
                     Address = new Address
                     {
                         PostalCode = "V6B 4Y8",
@@ -60,6 +62,7 @@ namespace Animal_Adoption_Management_System_Backend.Data
                     Name = "Furry Friends Adoption Center",
                     Phone = "(555) 555-5555",
                     Email = "furryfriends@example.com",
+                    IsActive = true,
                     Address = new Address
                     {
                         PostalCode = "WC2H 9JQ",
@@ -119,9 +122,9 @@ namespace Animal_Adoption_Management_System_Backend.Data
                 };
 
                 PasswordHasher<User> hasher = new();
-                employee1.PasswordHash = hasher.HashPassword(employee1, "Test123.");
-                employee2.PasswordHash = hasher.HashPassword(employee2, "Test123.");
-                employee3.PasswordHash = hasher.HashPassword(employee3, "Test123.");
+                employee1.PasswordHash = hasher.HashPassword(employee1, "Test1.");
+                employee2.PasswordHash = hasher.HashPassword(employee2, "Test1.");
+                employee3.PasswordHash = hasher.HashPassword(employee3, "Test1.");
 
                 await _userManager.CreateAsync(employee1);
                 await _context.SaveChangesAsync();

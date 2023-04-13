@@ -1,9 +1,11 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Authorization;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
@@ -14,11 +16,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPermissionChecker _permissionChecker;
 
-        public AnimalController(IUnitOfWork unitOfWork, IMapper mapper)
+        public AnimalController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _permissionChecker = permissionChecker;
         }
 
         [HttpGet]
@@ -38,14 +42,18 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(animalDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("{id}/details")]
         public async Task<ActionResult<AnimalDTOWithDetails>> GetAnimalWithDetails(int id)
         {
             Animal animalWithDetails = await _unitOfWork.AnimalService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForAnimal(animalWithDetails, HttpContext.User);
+
             AnimalDTOWithDetails animalDTOWithDetails = _mapper.Map<AnimalDTOWithDetails>(animalWithDetails);
             return Ok(animalDTOWithDetails);
         }
 
+        [Authorize]
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetFilteredAnimals(string? name, string? type, string? size, string? status, string? gender, string? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
         {
@@ -54,6 +62,15 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(animalDTOs);
         }
 
+        [HttpGet("{id}/image")]
+        public async Task<ActionResult<AnimalDTOWithDetails>> GetAnimalImage(int id)
+        {
+            Animal animalWithImages = await _unitOfWork.AnimalService.GetWithImagesAsync(id);
+            AnimalDTOWithDetails animalDTOWithDetails = _mapper.Map<AnimalDTOWithDetails>(animalWithImages);
+            return Ok(animalDTOWithDetails);
+        }
+
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPost]
         public async Task<ActionResult<AnimalDTO>> CreateAnimal(CreateAnimalDTO animalDTO)
         {
@@ -67,6 +84,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetAnimal", new { id = createdAnimal.Id }, createdAnimalDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")] // frontend automatically adds logged in User's ShelterId when adding new Animal
         [HttpPost("{id}/addShelterConnection")]  // when adding a new Animal to the system or when Animal is taken back to (new) Shelter again
         public async Task<ActionResult<AnimalShelterDTO>> CreateAnimalShelterConnection(int id, CreateAnimalShelterDTO animaShelterlDTO)
         {
@@ -81,39 +99,52 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(createdConnectionDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}/updateSterilisation")]
         public async Task<ActionResult<AnimalDTO>> UpdateSterilisation(int id, UpdateSterilisationDTO sterilisationDate)
         {
+            Animal animalWithDetails = await _unitOfWork.AnimalService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForAnimal(animalWithDetails, HttpContext.User);
+
             Animal updatedAnimal = await _unitOfWork.AnimalService.UpdateSterilisation(id, sterilisationDate);
 
             AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(updatedAnimal);
             return Ok(updatedAnimalDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}/updateStatus")]
         public async Task<ActionResult<AnimalDTO>> UpdateStatus(int id, [FromBody] AnimalStatus newStatus)
         {
+            Animal animalWithDetails = await _unitOfWork.AnimalService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForAnimal(animalWithDetails, HttpContext.User);
+
             Animal updatedAnimal = await _unitOfWork.AnimalService.UpdateStatus(id, newStatus);
 
             AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(updatedAnimal);
             return Ok(updatedAnimalDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}")]
         public async Task<ActionResult<AnimalDTO>> UpdateAnimal(int id, UpdateAnimalDTO animalDTO)
         {
-            Animal animal = await _unitOfWork.AnimalService.GetAsync(id);
+            Animal animalToUpdate = await _unitOfWork.AnimalService.GetAsync(id);
+            Animal animalWithDetails = await _unitOfWork.AnimalService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForAnimal(animalWithDetails, HttpContext.User);
+
             AnimalBreed breedOfAnimal = await _unitOfWork.AnimalBreedService.GetAsync(animalDTO.BreedId);
 
-            animal.Breed = breedOfAnimal;
-            _mapper.Map(animalDTO, animal);
+            animalToUpdate.Breed = breedOfAnimal;
+            _mapper.Map(animalDTO, animalToUpdate);
 
-            await _unitOfWork.AnimalService.UpdateAsync(animal);
+            await _unitOfWork.AnimalService.UpdateAsync(animalToUpdate);
 
-            AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(animal);
+            AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(animalToUpdate);
             return Ok(updatedAnimalDTO);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAnimal(int id)
         {

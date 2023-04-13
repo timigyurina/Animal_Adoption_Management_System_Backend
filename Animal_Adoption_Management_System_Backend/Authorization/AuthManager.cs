@@ -1,14 +1,15 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
-using Animal_Adoption_Management_System_Backend.Services.Interfaces;
+using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Animal_Adoption_Management_System_Backend.Services.Implementations
+namespace Animal_Adoption_Management_System_Backend.Authorization
 {
     public class AuthManager : IAuthManager
     {
@@ -48,7 +49,10 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         public async Task<AuthResponseDTO?> Login(LoginUserDTO loginUserDTO)
         {
             _logger.LogInformation($"Looking for user with email {loginUserDTO.Email}");
-            _user = await _userManager.FindByEmailAsync(loginUserDTO.Email);
+            //_user = await _userManager.FindByEmailAsync(loginUserDTO.Email);
+            _user = await _userManager.Users
+                .Include(u => u.Shelter)
+                .FirstOrDefaultAsync(u => u.Email == loginUserDTO.Email);
             bool isValidUser = await _userManager.CheckPasswordAsync(_user, loginUserDTO.Password);
 
             if (_user == null || isValidUser == false)
@@ -119,14 +123,21 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             IEnumerable<Claim> roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role)).ToList();
             //IEnumerable<Claim> userClaims = await _userManager.GetClaimsAsync(user);
 
-            IEnumerable<Claim> claims = new List<Claim>
+            List<Claim> claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, _user!.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, _user.Email),
-                //new Claim("userId", user.Id) 
+                new Claim(ClaimTypes.DateOfBirth, _user.DateOfBirth.ToString()),
+                new Claim("UserId", _user.Id),
             }
-            /*.Union(userClaims)*/.Union(roleClaims);
+            .Union(roleClaims).ToList();
+
+            if (_user.Shelter != null)
+            {
+                Claim shelterClaim = new Claim("ShelterId", _user.Shelter.Id.ToString());
+                claims.Add(shelterClaim);
+            }
 
             JwtSecurityToken token = new JwtSecurityToken(
                     issuer: _configuration["JwtSettings:Issuer"],
