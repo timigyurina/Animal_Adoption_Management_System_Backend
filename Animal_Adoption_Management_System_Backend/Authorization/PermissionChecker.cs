@@ -1,6 +1,5 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
-using Animal_Adoption_Management_System_Backend.Services.Implementations;
 using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Authorization
@@ -213,7 +212,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             _logger.LogWarning($"Checking if the requested {entityType} belongs to User");
             if (idToCheck == identityClaimValue)
             {
-                _logger.LogInformation($"User's identity claim does not authorize viewing the requested {entityType}");
+                _logger.LogInformation($"User's identity claim authorizes viewing the requested {entityType}");
                 return true;
             }
             _logger.LogInformation($"Current {entityType} does not belong to User ({idToCheck})");

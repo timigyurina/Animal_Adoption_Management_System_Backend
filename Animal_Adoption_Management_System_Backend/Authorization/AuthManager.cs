@@ -1,7 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.UserAuthDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
-using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Animal_Adoption_Management_System_Backend.Services.Implementations
+namespace Animal_Adoption_Management_System_Backend.Authorization
 {
     public class AuthManager : IAuthManager
     {
