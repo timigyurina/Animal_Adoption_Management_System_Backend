@@ -40,7 +40,7 @@ builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
 
 builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 
-builder.Services.AddSingleton<IAuthorizationHandler, AdopterAgeHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, AgeHandler>();
 builder.Services.AddSingleton<IEnumService, EnumService>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
 builder.Services.AddScoped<IPermissionChecker, PermissionChecker>();
@@ -81,8 +81,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("MinimalAdoptionAge", policy =>
-        policy.Requirements.Add(new AdopterAgeRequirement(20)));
+    options.AddPolicy("MinimalAge", policy =>
+        policy.Requirements.Add(new AgeRequirement(20)));
 });
 
 var app = builder.Build();

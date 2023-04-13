@@ -3,16 +3,16 @@ using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Authorization
 {
-    public class AdopterAgeHandler : AuthorizationHandler<AdopterAgeRequirement>
+    public class AgeHandler : AuthorizationHandler<AgeRequirement>
     {
 
         private readonly IConfiguration _configuration;
-        public AdopterAgeHandler(IConfiguration configuration)
+        public AgeHandler(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AdopterAgeRequirement requirement)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, AgeRequirement requirement)
         {
             bool adminRoleClaim = context.User.IsInRole("Administrator"); 
             if (adminRoleClaim)

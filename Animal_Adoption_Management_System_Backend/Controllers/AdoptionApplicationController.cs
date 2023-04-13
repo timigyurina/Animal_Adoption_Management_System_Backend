@@ -64,7 +64,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "MinimalAdoptionAge")]
+        [Authorize(Policy = "MinimalAge")]
         public async Task<ActionResult<AdoptionApplicationDTO>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)
         {
             AdoptionApplication adoptionApplicationToCreate = _mapper.Map<AdoptionApplication>(applicationDTO);

@@ -63,7 +63,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(donationDTOs);
         }
 
-        [Authorize(Policy = "MinimalAdoptionAge")]
+        [Authorize(Policy = "MinimalAge")]
         [HttpPost]
         public async Task<ActionResult<DonationDTO>> CreateDonation(CreateDonationDTO donationDTO)
         {
