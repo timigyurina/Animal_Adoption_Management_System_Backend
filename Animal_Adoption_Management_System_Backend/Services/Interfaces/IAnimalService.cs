@@ -12,5 +12,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task<Animal> GetWithImagesAsync(int id);
         Task<Animal> UpdateSterilisation(int id, UpdateSterilisationDTO sterilisationDate);
         Task<Animal> UpdateStatus(int id, AnimalStatus newStatus);
+        Task<Animal> GetWithAnimalShelterDetailsAsync(int animalId);
     }
 }

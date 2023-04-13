@@ -73,7 +73,17 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             return await _context.Images
                 .Include(i => i.Animal)
+                    .ThenInclude(a => a.AnimalShelters)
+                        .ThenInclude(s => s.Shelter)
                 .Include(i => i.Uploader)
+                .AsNoTracking()
+                .FirstAsync(i => i.Id == id);
+        }
+
+        public async Task<Image> GetWithAnimalAsync(int id)
+        {
+            return await _context.Images
+                .Include(i => i.Animal)
                 .AsNoTracking()
                 .FirstAsync(i => i.Id == id);
         }

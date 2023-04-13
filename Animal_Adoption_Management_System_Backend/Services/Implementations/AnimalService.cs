@@ -122,6 +122,17 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .FirstAsync(a => a.Id == id);
         }
 
+        public async Task<Animal> GetWithAnimalShelterDetailsAsync(int animalId)
+        {
+            if (!await Exists(animalId))
+                throw new NotFoundException(typeof(Animal).Name, animalId);
+
+            return await _context.Animals
+                .Include(a => a.AnimalShelters)
+                    .ThenInclude(s => s.Shelter)
+                .FirstAsync(a => a.Id == animalId);
+        }
+
 
         public override Task<Animal> AddAsync(Animal entity)
         {
