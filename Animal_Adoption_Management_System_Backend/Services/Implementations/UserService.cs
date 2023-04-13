@@ -86,6 +86,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .Include(u => u.AdoptionApplications)
                 .Include(u => u.AdoptionsContracts)
                 .Include(u => u.ManagedAdoptionsContracts)
+                .AsSplitQuery()
                 .AsNoTracking()
                 .FirstAsync(u => u.Id == id);
 
