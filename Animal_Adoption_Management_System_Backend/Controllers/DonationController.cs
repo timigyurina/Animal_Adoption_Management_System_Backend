@@ -1,25 +1,31 @@
-﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
+﻿using Animal_Adoption_Management_System_Backend.Authorization;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.DonationDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class DonationController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPermissionChecker _permissionChecker;
 
-        public DonationController(IUnitOfWork unitOfWork, IMapper mapper)
+        public DonationController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _permissionChecker = permissionChecker;
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DonationDTO>>> GetAllDonations()
         {
@@ -28,6 +34,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(donationDTOs);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("{id}")]
         public async Task<ActionResult<DonationDTO>> GetDonation(int id)
         {
@@ -41,10 +48,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<DonationDTOWithDetails>> GetDonationWithDetails(int id)
         {
             Donation donationWithDetails = await _unitOfWork.DonationService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForDonation(donationWithDetails, HttpContext.User);
+
             DonationDTOWithDetails donationDTOWithDetails = _mapper.Map<DonationDTOWithDetails>(donationWithDetails);
             return Ok(donationDTOWithDetails);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<DonationDTOWithDetails>>> GetFilteredDonations(string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status)
         {
@@ -53,6 +63,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(donationDTOs);
         }
 
+        [Authorize(Policy = "MinimalAdoptionAge")]
         [HttpPost]
         public async Task<ActionResult<DonationDTO>> CreateDonation(CreateDonationDTO donationDTO)
         {
@@ -65,15 +76,20 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetDonation", new { id = createdDonation.Id }, createdDonationDTO);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}/updateDonationStatus")]
         public async Task<ActionResult<DonationDTO>> UpdateStatus(int id, [FromBody] DonationStatus newStatus)
         {
+            Donation donationWithDetails = await _unitOfWork.DonationService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForDonation(donationWithDetails, HttpContext.User);
+
             Donation updatedDonation = await _unitOfWork.DonationService.UpdateDonationStatus(id, newStatus);
 
             DonationDTO updatedDonationDTO = _mapper.Map<DonationDTO>(updatedDonation);
             return Ok(updatedDonationDTO);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDonation(int id)
         {
