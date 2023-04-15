@@ -31,20 +31,44 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             try
             {
                 AuthResponseDTO? response = await _authManager.Login(loginDTO);
-                //Response.Cookies.Append("X-Access-Token", response.Token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
-
                 if (response == null)
                     return Unauthorized();
 
+                CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+                Response.Cookies.Append("X-Access-Token", response.Token, options);
+                Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, options);
+                Response.Cookies.Append("X-UserId", response.UserId, options);
+                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), options);
+
                 _logger.LogInformation($"User {loginDTO.Email} has logged in successfully at {DateTime.Now}");
-                return Ok(response);
+                return Ok();
             }
             catch (Exception exc)
             {
                 _logger.LogError(exc, $"Something went wrong in the {nameof(Login)}");
                 return Problem($"Something went wrong in the {nameof(Login)}. Please contact support!", statusCode: 500);
             }
+        }
+        [HttpGet("logout")]
+        public ActionResult Logout()
+        {
+            //Response.Cookies.Delete("X-Access-Token");
+            //Response.Cookies.Delete("X-Refresh-Token");
+            //Response.Cookies.Delete("X-UserId");
+            //Response.Cookies.Delete("X-UserRoles");
+            CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(-1), SameSite = SameSiteMode.None };
+            Response.Cookies.Append("X-Access-Token", "", options);
+            Response.Cookies.Append("X-Refresh-Token", "", options);
+            Response.Cookies.Append("X-UserId", "", options);
+            Response.Cookies.Append("X-UserRoles", "", options);
+            return Ok();
+        }
 
+        [HttpGet("validateUser")]
+        [Authorize]
+        public ActionResult ValidateUser()
+        {
+            return Ok();
         }
 
         [HttpPost]
@@ -132,17 +156,37 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             }
         }
 
-
-        [HttpPost]
-        [Route("refreshToken")]
-        public async Task<ActionResult> RefreshToken(AuthResponseDTO request)
+        [HttpGet("refreshToken")]
+        public async Task<IActionResult> Refresh()
         {
-            AuthResponseDTO? authResponse = await _authManager.VerifyRefreshToken(request);
+            if (!(Request.Cookies.TryGetValue("X-UserId", out var userId) && Request.Cookies.TryGetValue("X-Access-Token", out var token)
+                && Request.Cookies.TryGetValue("X-Refresh-Token", out var refreshToken)) || userId == null || token == null || refreshToken == null)
+                return BadRequest();
 
+            AuthResponseDTO? authResponse = await _authManager.VerifyRefreshToken(userId, token, refreshToken);
             if (authResponse == null)
                 return Unauthorized();
 
-            return Ok(authResponse);
+            CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+            Response.Cookies.Append("X-Access-Token", authResponse.Token, options);
+            Response.Cookies.Append("X-Refresh-Token", authResponse.RefreshToken, options);
+            Response.Cookies.Append("X-UserId", authResponse.UserId, options);
+            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), options);
+
+            return Ok();
         }
+
+        //[HttpPost]
+        //[Route("refreshToken")]
+        //public async Task<ActionResult> RefreshToken(RefreshTokenRequestDTO request)
+        //{
+        //    AuthResponseDTO? authResponse = await _authManager.VerifyRefreshToken(request.UserId, request.Token, request.RefreshToken);
+
+        //    if (authResponse == null)
+        //        return Unauthorized();
+
+        //    return Ok(authResponse);
+        //}
+
     }
 }
