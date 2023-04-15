@@ -83,27 +83,27 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             return newRefreshToken;
         }
 
-        public async Task<AuthResponseDTO?> VerifyRefreshToken(AuthResponseDTO request)
+        public async Task<AuthResponseDTO?> VerifyRefreshToken(string userId, string token, string refreshToken)
         {
             JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-            JwtSecurityToken tokenContent = jwtSecurityTokenHandler.ReadJwtToken(request.Token);
+            JwtSecurityToken tokenContent = jwtSecurityTokenHandler.ReadJwtToken(token);
 
             // search for the username with this token
             string? userName = tokenContent.Claims.ToList()
                 .FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sub)?.Value;
             _user = await _userManager.FindByNameAsync(userName);
-            if (_user == null || _user.Id != request.UserId)
+            if (_user == null || _user.Id != userId)
                 return null;
 
-            bool isValidRefreshToken = await _userManager.VerifyUserTokenAsync(_user, _loginProvider, _refreshToken, request.RefreshToken);
+            bool isValidRefreshToken = await _userManager.VerifyUserTokenAsync(_user, _loginProvider, _refreshToken, refreshToken);
 
             if (isValidRefreshToken)
             {
-                string token = await GenerateToken();
+                string newTtoken = await GenerateToken();
                 return new AuthResponseDTO
                 {
                     UserId = _user.Id,
-                    Token = token,
+                    Token = newTtoken,
                     Roles = await _userManager.GetRolesAsync(_user),
                     RefreshToken = await CreateRefreshToken()
                 };
@@ -116,7 +116,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
         private async Task<string> GenerateToken()
         {
             SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]!));
-            SigningCredentials credenials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            SigningCredentials credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             IEnumerable<string> roles = await _userManager.GetRolesAsync(_user!);
 
@@ -144,7 +144,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                     audience: _configuration["JwtSettings:Audience"],
                     claims: claims,
                     expires: DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["JwtSettings:DurationInMinutes"])),
-                    signingCredentials: credenials
+                    signingCredentials: credentials
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);

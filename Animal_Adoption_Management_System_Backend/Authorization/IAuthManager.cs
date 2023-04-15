@@ -9,6 +9,6 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
         Task<AuthResponseDTO?> Login(LoginUserDTO loginUserDTO);
 
         Task<string> CreateRefreshToken();
-        Task<AuthResponseDTO?> VerifyRefreshToken(AuthResponseDTO request);
+        Task<AuthResponseDTO?> VerifyRefreshToken(string userId, string token, string refreshToken);
     }
 }
