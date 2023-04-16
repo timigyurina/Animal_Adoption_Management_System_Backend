@@ -10,6 +10,5 @@ namespace Animal_Adoption_Management_System_Backend.Models.Exceptions
 
         public abstract HttpStatusCode StatusCode { get; }
         public abstract string ErrorType { get; }
-        public string Message => base.Message;
     }
 }

@@ -44,11 +44,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpGet("{id}/details")]
-        //[ShelterIdAuthorize("{id}")]
         public async Task<ActionResult<ShelterDTOWithDetails>> GetShelterWithDetails(int id)
         {
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
             Shelter shelterWithDetails = await _unitOfWork.ShelterService.GetWithDetailsAsync(id);
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
             ShelterDTOWithDetails shelterDTOWithDetails = _mapper.Map<ShelterDTOWithDetails>(shelterWithDetails);
             return Ok(shelterDTOWithDetails);
         }
@@ -77,8 +76,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateShelterContactInfo")]
         public async Task<ActionResult<ShelterDTO>> UpdateShelterContactInfo(int id, UpdateShelterContactInfoDTO shelterDTO)
         {
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User); 
             Shelter shelterToUpdate = await _unitOfWork.ShelterService.GetWithAddressAsync(id);
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User); 
 
             _mapper.Map(shelterDTO, shelterToUpdate);
 
@@ -102,9 +101,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateShelterIsActive")]
         public async Task<ActionResult<ShelterDTO>> UpdateStatus(int id, [FromBody] bool isActive)
         {
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
-
             Shelter updatedShelter = await _unitOfWork.ShelterService.UpdateShelterIsActive(id, isActive);
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
 
             ShelterDTO updatedShelterDTO = _mapper.Map<ShelterDTO>(updatedShelter);
             return Ok(updatedShelterDTO);
