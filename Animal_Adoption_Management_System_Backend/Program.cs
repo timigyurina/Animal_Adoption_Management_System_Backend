@@ -33,22 +33,16 @@ builder.Services.AddIdentityCore<User>()
     .AddTokenProvider<DataProtectorTokenProvider<User>>(builder.Configuration["JwtSettings:TokenProvider"])
     .AddEntityFrameworkStores<AnimalAdoptionContext>();
 
-//builder.Services.AddCors(options => options.AddPolicy("AllowAll", builder =>
-//{
-//    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-//}));
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowOnlyLocalhostOrigin",
-        policy =>
-            {
-                policy.WithOrigins("http://localhost:3000");
-                policy.AllowAnyHeader();
-                policy.AllowAnyMethod();
-                policy.AllowCredentials();
-            });
-            });
-
+    options.AddPolicy("AllowOnlyLocalhostOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000");
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+        policy.AllowCredentials();
+    });
+});
 
 builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 

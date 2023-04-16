@@ -53,9 +53,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public ActionResult Logout()
         {
             //Response.Cookies.Delete("X-Access-Token");
-            //Response.Cookies.Delete("X-Refresh-Token");
-            //Response.Cookies.Delete("X-UserId");
-            //Response.Cookies.Delete("X-UserRoles");
             CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(-1), SameSite = SameSiteMode.None };
             Response.Cookies.Append("X-Access-Token", "", options);
             Response.Cookies.Append("X-Refresh-Token", "", options);
@@ -103,7 +100,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult> RegisterAdmin(RegisterUserDTO registerUserDTO)
         {
             _logger.LogInformation($"Admin registration attempt for {registerUserDTO.Email}");
-
             try
             {
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "Administrator");
