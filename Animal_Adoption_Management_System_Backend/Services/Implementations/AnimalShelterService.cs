@@ -4,12 +4,13 @@ using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
     public class AnimalShelterService : GenericRepository<AnimalShelter>, IAnimalShelterService
     {
-        public AnimalShelterService(AnimalAdoptionContext context) : base(context)
+        public AnimalShelterService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
         }
 

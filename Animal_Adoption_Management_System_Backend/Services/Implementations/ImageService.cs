@@ -6,15 +6,17 @@ using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
     public class ImageService : GenericRepository<Image>, IImageService
     {
         private static readonly string WorkDir = AppDomain.CurrentDomain.BaseDirectory;
-        public ImageService(AnimalAdoptionContext context) : base(context)
+        public ImageService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
         }
+
         public async Task<string> SaveImageAsync(CreateImageDTO imageDTO)
         {
             string filePath = CreateImageFilePath(imageDTO);
