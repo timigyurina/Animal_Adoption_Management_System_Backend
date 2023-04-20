@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Animal_Adoption_Management_System_Backend.Models.Pagination;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Repositories
 {
@@ -14,5 +15,7 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
         Task UpdateAsync(T entity);
         Task DeleteAsync(int id);
         Task<bool> Exists(int id);
+
+        Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "");
     }
 }
