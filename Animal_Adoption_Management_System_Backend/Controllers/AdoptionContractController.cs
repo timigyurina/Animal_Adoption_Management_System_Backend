@@ -3,6 +3,7 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionContractDTOs
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -28,12 +29,20 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<AdoptionContractDTO>>> GetAllAdoptionContracts()
         {
             IEnumerable<AdoptionContract> adoptionContracts = await _unitOfWork.AdoptionContractService.GetAllAsync();
             IEnumerable<AdoptionContractDTO> adoptionContractDTOs = _mapper.Map<IEnumerable<AdoptionContractDTO>>(adoptionContracts);
             return Ok(adoptionContractDTOs);
+        }
+
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<AdoptionContractDTO>>> GetPagedAdoptionContracts([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<AdoptionContractDTO> pagedResult = await _unitOfWork.AdoptionContractService.GetAllAsync<AdoptionContractDTO>(queryParameters);
+            return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
@@ -76,7 +85,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             AdoptionContract adoptionContractToCreate = _mapper.Map<AdoptionContract>(contractDTO);
 
             AdoptionContract adoptionContractToCreateWithRelations = await _unitOfWork.AdoptionContractService.TryAddRelatedEntitiesToAdoptionContract(adoptionContractToCreate, contractDTO.AnimalId, contractDTO.ApplierId);
-            
+
             _permissionChecker.CheckPermissionForAnimal(adoptionContractToCreateWithRelations.Animal, User);
 
             // check for existing AdoptionApplication and set its Status to approved

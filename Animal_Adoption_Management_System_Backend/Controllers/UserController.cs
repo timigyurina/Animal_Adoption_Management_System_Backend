@@ -6,6 +6,7 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ManagedAdoptionContractDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -30,12 +31,20 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [Authorize(Roles = "Administrator")]
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers()
         {
             IEnumerable<User> users = await _unitOfWork.UserService.GetAllAsync();
             IEnumerable<UserDTO> userDTOs = _mapper.Map<IEnumerable<UserDTO>>(users);
             return Ok(userDTOs);
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<UserDTO>>> GetPagedUsers([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<UserDTO> pagedResult = await _unitOfWork.UserService.GetAllAsync<UserDTO>(queryParameters);
+            return Ok(pagedResult);
         }
 
         [Authorize(Roles = "Administrator")]

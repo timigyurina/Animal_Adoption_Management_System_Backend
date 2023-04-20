@@ -1,9 +1,11 @@
 ﻿using Animal_Adoption_Management_System_Backend.Data;
-using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Linq.Expressions;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace Animal_Adoption_Management_System_Backend.Repositories
 {
@@ -11,10 +13,13 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
     {
         internal readonly AnimalAdoptionContext _context;
         internal readonly DbSet<T> _dbSet;
-        public GenericRepository(AnimalAdoptionContext context)
+        private readonly IMapper _mapper;
+
+        public GenericRepository(AnimalAdoptionContext context, IMapper mapper)
         {
             _context = context;
             _dbSet = _context.Set<T>();
+            _mapper = mapper;
         }
 
 
@@ -73,6 +78,30 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
         {
             T? entity = await _dbSet.FindAsync(id);
             return entity != null;
+        }
+
+        public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "")
+        {
+            int totalSize = await _context.Set<T>().CountAsync();
+
+            IQueryable<T> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                query = query.Include(includeProperty);
+
+            List<TResult> items = await query
+                .Skip(queryParameters.StartIndex)
+                .Take(queryParameters.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider) // TResult represents the DTO, T represents the model
+                .ToListAsync();
+
+            return new PagedResult<TResult>
+            {
+                Items = items,
+                CurrentPage = queryParameters.PageNumber,
+                PageSize = queryParameters.PageSize,
+                TotalCount = totalSize
+            };
         }
     }
 }

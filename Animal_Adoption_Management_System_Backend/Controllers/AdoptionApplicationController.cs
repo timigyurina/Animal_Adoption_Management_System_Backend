@@ -2,6 +2,7 @@
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AdoptionApplicationDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -26,12 +27,20 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<AdoptionApplicationDTO>>> GetAllAdoptionApplications()
         {
             IEnumerable<AdoptionApplication> adoptionApplications = await _unitOfWork.AdoptionApplicationService.GetAllAsync();
             IEnumerable<AdoptionApplicationDTO> adoptionApplicationDTOs = _mapper.Map<IEnumerable<AdoptionApplicationDTO>>(adoptionApplications);
             return Ok(adoptionApplicationDTOs);
+        }
+
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<AdoptionApplicationDTO>>> GetPagedAdoptionApplications([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<AdoptionApplicationDTO> pagedResult = await _unitOfWork.AdoptionApplicationService.GetAllAsync<AdoptionApplicationDTO>(queryParameters);
+            return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]

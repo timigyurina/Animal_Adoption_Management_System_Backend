@@ -1,4 +1,5 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
 {
@@ -20,5 +21,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task CreateConnectionWithShelterByEmail(Shelter shelter, string email, bool isContactOfShelter);
         Task<User> UpdateUserIsActive(string id, bool isActive);
         Task<User> UpdateConnectionWithShelterById(Shelter? shelter, string id, bool isContactOfShelter);
+
+        Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "");
     }
 }

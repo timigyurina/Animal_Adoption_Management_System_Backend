@@ -5,12 +5,13 @@ using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
     public class AdoptionContractService : GenericRepository<AdoptionContract>, IAdoptionContractService
     {
-        public AdoptionContractService(AnimalAdoptionContext context) : base(context)
+        public AdoptionContractService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
         }
 
