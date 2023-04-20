@@ -1,23 +1,52 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
     public class UserService : IUserService
     {
         private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
 
-        public UserService(UserManager<User> userManager)
+        public UserService(UserManager<User> userManager, IMapper mapper)
         {
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _userManager.Users.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "")
+        {
+            int totalSize = await _userManager.Users.CountAsync();
+
+            IQueryable<User> query = _userManager.Users;
+
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                query = query.Include(includeProperty);
+
+            List<TResult> items = await query
+                .Skip(queryParameters.StartIndex)
+                .Take(queryParameters.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return new PagedResult<TResult>
+            {
+                Items = items,
+                CurrentPage = queryParameters.PageNumber,
+                PageSize = queryParameters.PageSize,
+                TotalCount = totalSize
+            };
         }
 
         public async Task<User> GetAsync(string id)
@@ -114,7 +143,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                     .ThenInclude(s => s.Employees)
                 .Include(u => u.Shelter!)
                     .ThenInclude(s => s.Address)
-                //.AsNoTracking()
                 .FirstAsync(u => u.Id == id);
 
             return user;
