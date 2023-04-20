@@ -2,6 +2,7 @@
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -26,13 +27,19 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _permissionChecker = permissionChecker;
         }
 
-
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetAllImages()
         {
             IEnumerable<Image> images = await _unitOfWork.ImageService.GetAllAsync(null, null, "Animal");
             IEnumerable<ImageDTOWithDetails> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithDetails>>(images);
             return Ok(imageDTOs);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<ImageDTOWithDetails>>> GetPagedImages([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<ImageDTOWithDetails> pagedResult = await _unitOfWork.ImageService.GetAllAsync<ImageDTOWithDetails>(queryParameters, "Animal");
+            return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]

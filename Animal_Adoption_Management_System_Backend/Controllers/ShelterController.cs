@@ -2,6 +2,7 @@
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -26,12 +27,19 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _permissionChecker = permissionChecker;
         }
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<ShelterDTO>>> GetAllShelters()
         {
             IEnumerable<Shelter> shelters = await _unitOfWork.ShelterService.GetAllAsync();
             IEnumerable<ShelterDTO> shelterDTOs = _mapper.Map<IEnumerable<ShelterDTO>>(shelters);
             return Ok(shelterDTOs);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<ShelterDTO>>> GetPagedAnimals([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<ShelterDTO> pagedResult = await _unitOfWork.ShelterService.GetAllAsync<ShelterDTO>(queryParameters);
+            return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
@@ -77,7 +85,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<ShelterDTO>> UpdateShelterContactInfo(int id, UpdateShelterContactInfoDTO shelterDTO)
         {
             Shelter shelterToUpdate = await _unitOfWork.ShelterService.GetWithAddressAsync(id);
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User); 
+            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
 
             _mapper.Map(shelterDTO, shelterToUpdate);
 

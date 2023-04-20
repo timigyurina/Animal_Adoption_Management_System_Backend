@@ -2,6 +2,7 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -24,12 +25,19 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<AnimalBreedDTO>>> GetAllRBreeds()
         {
             IEnumerable<AnimalBreed> breeds = await _unitOfWork.AnimalBreedService.GetAllAsync();
             IEnumerable<AnimalBreedDTO> breedDTOs = _mapper.Map<IEnumerable<AnimalBreedDTO>>(breeds);
             return Ok(breedDTOs);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<AnimalBreedDTO>>> GetPagedAnimalBreeds([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<AnimalBreedDTO> pagedAnimalBreedsResult = await _unitOfWork.AnimalBreedService.GetAllAsync<AnimalBreedDTO>(queryParameters);
+            return Ok(pagedAnimalBreedsResult);
         }
 
         [HttpGet("{id}")]

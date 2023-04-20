@@ -3,6 +3,7 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -25,12 +26,20 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             _permissionChecker = permissionChecker;
         }
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetAllAnimals()
         {
             IEnumerable<Animal> animals = await _unitOfWork.AnimalService.GetAllAsync();
             IEnumerable<AnimalDTO> animalDTOs = _mapper.Map<IEnumerable<AnimalDTO>>(animals);
             return Ok(animalDTOs);
+        }
+
+        // GET: api/animal/?pagesize=25&pageNumber=1
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<AnimalDTO>>> GetPagedAnimals([FromQuery] QueryParameters queryParameters)
+        {
+            PagedResult<AnimalDTO> pagedAnimalsResult = await _unitOfWork.AnimalService.GetAllAsync<AnimalDTO>(queryParameters);
+            return Ok(pagedAnimalsResult);
         }
 
         [HttpGet("{id}")]
