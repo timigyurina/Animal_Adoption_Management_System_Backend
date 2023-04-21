@@ -38,7 +38,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 Response.Cookies.Append("X-Access-Token", response.Token, options);
                 Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, options);
                 Response.Cookies.Append("X-UserId", response.UserId, options);
-                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), options);
+                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), new CookieOptions()
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    Path = "/",
+                    Expires = DateTime.Now.AddDays(1),
+                    SameSite = SameSiteMode.None
+                });
 
                 _logger.LogInformation($"User {loginDTO.Email} has logged in successfully at {DateTime.Now}");
                 return Ok();
@@ -61,8 +68,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok();
         }
 
-        [HttpGet("validateUser")]
         [Authorize]
+        [HttpGet("validateUser")]
         public ActionResult ValidateUser()
         {
             return Ok();
@@ -94,8 +101,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             }
         }
 
-        [HttpPost]
         [Authorize(Roles = "Administrator")]
+        [HttpPost]
         [Route("registerAdmin")]
         public async Task<ActionResult> RegisterAdmin(RegisterUserDTO registerUserDTO)
         {
@@ -121,8 +128,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             }
         }
 
-        [HttpPost]
         [Authorize(Roles = "Administrator")]
+        [HttpPost]
         [Route("registerEmployee")]
         public async Task<ActionResult> RegisterEmployee(RegisterShelterEmployeeDTO registerUserDTO)
         {
@@ -167,7 +174,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             Response.Cookies.Append("X-Access-Token", authResponse.Token, options);
             Response.Cookies.Append("X-Refresh-Token", authResponse.RefreshToken, options);
             Response.Cookies.Append("X-UserId", authResponse.UserId, options);
-            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), options);
+            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), new CookieOptions()
+            {
+                HttpOnly = false,
+                Secure = true,
+                Path = "/",
+                Expires = DateTime.Now.AddDays(1),
+                SameSite = SameSiteMode.None
+            });
 
             return Ok();
         }
