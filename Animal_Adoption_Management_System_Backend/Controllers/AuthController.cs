@@ -34,19 +34,15 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 if (response == null)
                     return Unauthorized();
 
-                CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
-                Response.Cookies.Append("X-Access-Token", response.Token, options);
-                Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, options);
-                Response.Cookies.Append("X-UserId", response.UserId, options);
-                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), new CookieOptions()
-                {
-                    HttpOnly = false,
-                    Secure = true,
-                    Path = "/",
-                    Expires = DateTime.Now.AddDays(1),
-                    SameSite = SameSiteMode.None
-                });
-
+                CookieOptions httpOnlyCookieOptions = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+                CookieOptions nonHttpOnlyCookieOptions = new() { HttpOnly = false, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+                Response.Cookies.Append("X-Access-Token", response.Token, httpOnlyCookieOptions);
+                Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, httpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserId", response.UserId, httpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), nonHttpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), nonHttpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserEmail", string.Join(',', response.UserEmail), nonHttpOnlyCookieOptions);
+                
                 _logger.LogInformation($"User {loginDTO.Email} has logged in successfully at {DateTime.Now}");
                 return Ok();
             }
@@ -65,6 +61,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             Response.Cookies.Append("X-Refresh-Token", "", options);
             Response.Cookies.Append("X-UserId", "", options);
             Response.Cookies.Append("X-UserRoles", "", options);
+            Response.Cookies.Append("X-UserEmail", "", options);
             return Ok();
         }
 
@@ -170,18 +167,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             if (authResponse == null)
                 return Unauthorized();
 
-            CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
-            Response.Cookies.Append("X-Access-Token", authResponse.Token, options);
-            Response.Cookies.Append("X-Refresh-Token", authResponse.RefreshToken, options);
-            Response.Cookies.Append("X-UserId", authResponse.UserId, options);
-            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), new CookieOptions()
-            {
-                HttpOnly = false,
-                Secure = true,
-                Path = "/",
-                Expires = DateTime.Now.AddDays(1),
-                SameSite = SameSiteMode.None
-            });
+            CookieOptions httpOnlyCookieOptions = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+            CookieOptions nonHttpOnlyCookieOptions = new() { HttpOnly = false, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+            Response.Cookies.Append("X-Access-Token", authResponse.Token, httpOnlyCookieOptions);
+            Response.Cookies.Append("X-Refresh-Token", authResponse.RefreshToken, httpOnlyCookieOptions);
+            Response.Cookies.Append("X-UserId", authResponse.UserId, httpOnlyCookieOptions);
+            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), nonHttpOnlyCookieOptions);
+            Response.Cookies.Append("X-UserEmail", string.Join(',', authResponse.UserEmail), nonHttpOnlyCookieOptions);
 
             return Ok();
         }
