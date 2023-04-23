@@ -67,6 +67,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             return new AuthResponseDTO
             {
                 UserId = _user.Id,
+                UserEmail = _user.Email,
                 Roles = await _userManager.GetRolesAsync(_user),
                 Token = token,
                 RefreshToken = await CreateRefreshToken()
@@ -103,6 +104,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 return new AuthResponseDTO
                 {
                     UserId = _user.Id,
+                    UserEmail = _user.Email,
                     Token = newTtoken,
                     Roles = await _userManager.GetRolesAsync(_user),
                     RefreshToken = await CreateRefreshToken()
