@@ -15,22 +15,22 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class DonationController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IDonationService _donationService;
         private readonly IMapper _mapper;
         private readonly IPermissionChecker _permissionChecker;
 
-        public DonationController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
+        public DonationController(IMapper mapper, IPermissionChecker permissionChecker, IDonationService donationService)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _permissionChecker = permissionChecker;
+            _donationService = donationService;
         }
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<DonationDTO>>> GetAllDonations()
         {
-            IEnumerable<Donation> donations = await _unitOfWork.DonationService.GetAllAsync();
+            IEnumerable<Donation> donations = await _donationService.GetAllAsync();
             IEnumerable<DonationDTO> donationDTOs = _mapper.Map<IEnumerable<DonationDTO>>(donations);
             return Ok(donationDTOs);
         }
@@ -39,7 +39,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<DonationDTO>>> GetPagedDonations([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<DonationDTO> pagedResult = await _unitOfWork.DonationService.GetAllAsync<DonationDTO>(queryParameters);
+            PagedResult<DonationDTO> pagedResult = await _donationService.GetAllAsync<DonationDTO>(queryParameters);
             return Ok(pagedResult);
         }
 
@@ -47,7 +47,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<DonationDTO>> GetDonation(int id)
         {
-            Donation donation = await _unitOfWork.DonationService.GetAsync(id);
+            Donation donation = await _donationService.GetAsync(id);
 
             DonationDTO donationDTO = _mapper.Map<DonationDTO>(donation);
             return Ok(donationDTO);
@@ -56,7 +56,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<DonationDTOWithDetails>> GetDonationWithDetails(int id)
         {
-            Donation donationWithDetails = await _unitOfWork.DonationService.GetWithDetailsAsync(id);
+            Donation donationWithDetails = await _donationService.GetWithDetailsAsync(id);
             _permissionChecker.CheckPermissionForDonation(donationWithDetails, HttpContext.User);
 
             DonationDTOWithDetails donationDTOWithDetails = _mapper.Map<DonationDTOWithDetails>(donationWithDetails);
@@ -67,7 +67,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<DonationDTOWithDetails>>> GetFilteredDonations(string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status)
         {
-            IEnumerable<Donation> donations = await _unitOfWork.DonationService.GetFilteredDonationsAsync(shelterName, donatorName, minAmount, maxAmount, dateAfter, dateBefore, status);
+            IEnumerable<Donation> donations = await _donationService.GetFilteredDonationsAsync(shelterName, donatorName, minAmount, maxAmount, dateAfter, dateBefore, status);
             IEnumerable<DonationDTOWithDetails> donationDTOs = _mapper.Map<IEnumerable<DonationDTOWithDetails>>(donations);
             return Ok(donationDTOs);
         }
@@ -77,9 +77,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<DonationDTO>> CreateDonation(CreateDonationDTO donationDTO)
         {
             Donation donationToCreate = _mapper.Map<Donation>(donationDTO);
-            Donation donationToCreateWithDonatorAndShelter = await _unitOfWork.DonationService.TryAddDonatorAndShelterToDonation(donationToCreate, donationDTO.UserId, donationDTO.ShelterId);
+            Donation donationToCreateWithDonatorAndShelter = await _donationService.TryAddDonatorAndShelterToDonation(donationToCreate, donationDTO.UserId, donationDTO.ShelterId);
 
-            Donation createdDonation = await _unitOfWork.DonationService.AddAsync(donationToCreateWithDonatorAndShelter);
+            Donation createdDonation = await _donationService.AddAsync(donationToCreateWithDonatorAndShelter);
 
             DonationDTO createdDonationDTO = _mapper.Map<DonationDTO>(createdDonation);
             return CreatedAtAction("GetDonation", new { id = createdDonation.Id }, createdDonationDTO);
@@ -89,10 +89,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateDonationStatus")]
         public async Task<ActionResult<DonationDTO>> UpdateStatus(int id, [FromBody] DonationStatus newStatus)
         {
-            Donation donationWithDetails = await _unitOfWork.DonationService.GetWithDetailsAsync(id);
+            Donation donationWithDetails = await _donationService.GetWithDetailsAsync(id);
             _permissionChecker.CheckPermissionForDonation(donationWithDetails, HttpContext.User);
 
-            Donation updatedDonation = await _unitOfWork.DonationService.UpdateDonationStatus(id, newStatus);
+            Donation updatedDonation = await _donationService.UpdateDonationStatus(id, newStatus);
 
             DonationDTO updatedDonationDTO = _mapper.Map<DonationDTO>(updatedDonation);
             return Ok(updatedDonationDTO);
@@ -102,7 +102,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDonation(int id)
         {
-            await _unitOfWork.DonationService.DeleteAsync(id);
+            await _donationService.DeleteAsync(id);
             return NoContent();
         }
     }

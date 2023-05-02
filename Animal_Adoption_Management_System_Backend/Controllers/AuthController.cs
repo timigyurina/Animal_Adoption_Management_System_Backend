@@ -12,15 +12,17 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IShelterService _shelterService;
+        private readonly IUserService _userService;
         private readonly IAuthManager _authManager;
         private readonly ILogger<AuthController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthController(IAuthManager authManager, ILogger<AuthController> logger, IUnitOfWork unitOfWork)
+        public AuthController(IAuthManager authManager, ILogger<AuthController> logger, IShelterService shelterService, IUserService userService)
         {
             _authManager = authManager;
             _logger = logger;
-            _unitOfWork = unitOfWork;
+            _shelterService = shelterService;
+            _userService = userService;
         }
 
         [HttpPost]
@@ -131,7 +133,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult> RegisterEmployee(RegisterShelterEmployeeDTO registerUserDTO)
         {
             _logger.LogInformation($"Employee registration attempt for {registerUserDTO.Email}");
-            Shelter shelter = await _unitOfWork.ShelterService.GetAsync(registerUserDTO.ShelterId);
+            Shelter shelter = await _shelterService.GetAsync(registerUserDTO.ShelterId);
             try
             {
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "ShelterEmployee");
@@ -144,7 +146,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                     return BadRequest(ModelState);
                 }
                 // Add User to Shelter as employee
-                await _unitOfWork.UserService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
+                await _userService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
 
                 _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as a ShelterEmployee at {DateTime.Now}");
                 return Ok();
@@ -177,18 +179,6 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
             return Ok();
         }
-
-        //[HttpPost]
-        //[Route("refreshToken")]
-        //public async Task<ActionResult> RefreshToken(RefreshTokenRequestDTO request)
-        //{
-        //    AuthResponseDTO? authResponse = await _authManager.VerifyRefreshToken(request.UserId, request.Token, request.RefreshToken);
-
-        //    if (authResponse == null)
-        //        return Unauthorized();
-
-        //    return Ok(authResponse);
-        //}
 
     }
 }
