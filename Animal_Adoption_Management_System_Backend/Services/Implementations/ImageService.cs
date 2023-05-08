@@ -65,7 +65,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 imageQuery = imageQuery.Where(i => i.DateTaken >= takenAfter);
             }
 
-                return await imageQuery.ToListAsync();
+            return await imageQuery.ToListAsync();
         }
 
         public async Task<Image> GetWithDetailsAsync(int id)
@@ -84,17 +84,19 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Image> GetWithAnimalAsync(int id)
         {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(Image).Name, id);
+
             return await _context.Images
                 .Include(i => i.Animal)
                 .AsNoTracking()
                 .FirstAsync(i => i.Id == id);
         }
 
-        private static string CreateImageFilePath(CreateImageDTO imageDTO)
+        private string CreateImageFilePath(CreateImageDTO imageDTO)
         {
             string uniqueFileName = GetUniqueFileName(imageDTO.Image.FileName);
-            string uploads = Path.Combine(WorkDir, "Animals", "Images", imageDTO.AnimalId.ToString());
-            string filePath = Path.Combine(uploads, uniqueFileName);
+            string filePath = Path.Combine("Images", "Animals", imageDTO.AnimalId.ToString(), uniqueFileName);
             return filePath;
         }
 

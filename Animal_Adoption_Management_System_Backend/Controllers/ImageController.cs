@@ -96,7 +96,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 throw new BadRequestException("Invalid post header");
 
             Animal animal = await _animalService.GetWithAnimalShelterDetailsAsync(imageDTO.AnimalId);
-            User uploader = await _userService.GetAsync(imageDTO.UploaderId);
+            User uploader = await _userService.GetAsync(User.Claims.First(c => c.Type == "UserId").Value);
 
             Image imageToUpload = _mapper.Map<Image>(imageDTO);
             imageToUpload.Animal = animal;
