@@ -34,7 +34,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             {
                 AuthResponseDTO? response = await _authManager.Login(loginDTO);
                 if (response == null)
-                    return Unauthorized();
+                    return Unauthorized(new ResponseMessage { Message = "Unauthorized" });
 
                 CookieOptions httpOnlyCookieOptions = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
                 CookieOptions nonHttpOnlyCookieOptions = new() { HttpOnly = false, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
@@ -42,11 +42,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, httpOnlyCookieOptions);
                 Response.Cookies.Append("X-UserId", response.UserId, httpOnlyCookieOptions);
                 Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), nonHttpOnlyCookieOptions);
-                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), nonHttpOnlyCookieOptions);
                 Response.Cookies.Append("X-UserEmail", string.Join(',', response.UserEmail), nonHttpOnlyCookieOptions);
-                
+
                 _logger.LogInformation($"User {loginDTO.Email} has logged in successfully at {DateTime.Now}");
-                return Ok();
+                return Ok(new ResponseMessage { Message = "Successful login" });
             }
             catch (Exception exc)
             {
@@ -64,7 +63,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             Response.Cookies.Append("X-UserId", "", options);
             Response.Cookies.Append("X-UserRoles", "", options);
             Response.Cookies.Append("X-UserEmail", "", options);
-            return Ok();
+            return Ok(new ResponseMessage { Message = "Successful logout" });
         }
 
         [Authorize]
@@ -84,14 +83,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "Adopter");
                 if (errors.Any())
                 {
+                    List<string> errorList = new List<string>();
                     foreach (var error in errors)
-                    {
-                        ModelState.AddModelError(error.Code, error.Description);
-                    }
-                    return BadRequest(ModelState);
+                        errorList.Add(error.Description);
+
+                    return BadRequest(new ResponseMessage { Message = string.Join(',', errorList) });
                 }
                 _logger.LogInformation($"User {registerUserDTO.Email} has registered successfully at {DateTime.Now}");
-                return Ok();
+                return Ok(new ResponseMessage { Message = $"Successful registration for {registerUserDTO.Email}" });
             }
             catch (Exception exc)
             {
@@ -111,11 +110,11 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "Administrator");
                 if (errors.Any())
                 {
+                    List<string> errorList = new List<string>();
                     foreach (var error in errors)
-                    {
-                        ModelState.AddModelError(error.Code, error.Description);
-                    }
-                    return BadRequest(ModelState);
+                        errorList.Add(error.Description);
+
+                    return BadRequest(new ResponseMessage { Message = string.Join(',', errorList) });
                 }
                 _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as an Administrator at {DateTime.Now}");
                 return Ok();
@@ -139,11 +138,11 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "ShelterEmployee");
                 if (errors.Any())
                 {
+                    List<string> errorList = new List<string>();
                     foreach (var error in errors)
-                    {
-                        ModelState.AddModelError(error.Code, error.Description);
-                    }
-                    return BadRequest(ModelState);
+                        errorList.Add(error.Description);
+
+                    return BadRequest(new ResponseMessage { Message = string.Join(',', errorList) });
                 }
                 // Add User to Shelter as employee
                 await _userService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
