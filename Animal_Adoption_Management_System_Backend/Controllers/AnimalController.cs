@@ -70,7 +70,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
         [Authorize]
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetFilteredAnimals(string? name, string? type, string? size, string? status, string? gender, string? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
+        public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetFilteredAnimals(string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
         {
             IEnumerable<Animal> animals = await _animalService.GetFilteredAnimalsAsync(name, type, size, status, gender, color, breedId, isSterilised, bornAfter, bornBefore);
             IEnumerable<AnimalDTO> animalDTOs = _mapper.Map<IEnumerable<AnimalDTO>>(animals);

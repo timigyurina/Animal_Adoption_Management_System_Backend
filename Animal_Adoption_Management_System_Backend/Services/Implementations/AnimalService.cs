@@ -18,11 +18,11 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<IEnumerable<Animal>> GetFilteredAnimalsAsync(
             string? name,
-            string? type,
-            string? size,
-            string? status,
-            string? gender,
-            string? color,
+            AnimalType? type,
+            AnimalSize? size,
+            AnimalStatus? status,
+            Gender? gender,
+            AnimalColor? color,
             int? breedId,
             bool? isSterilised,
             DateTime? bornAfter,
@@ -35,45 +35,25 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 animalQuery = animalQuery
                     .Where(a => a.Name.ToLower().Contains(name.ToLower()));
             }
-            if (!string.IsNullOrWhiteSpace(type))
+            if (type != null)
             {
-                bool animalTypeParsed = int.TryParse(type, out int animalTypeNumber);
-                if (!animalTypeParsed || animalTypeNumber >= Enum.GetNames(typeof(AnimalType)).Length || animalTypeNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(AnimalType)}");
-
-                animalQuery = animalQuery.Where(a => (int)a.Type == animalTypeNumber);
+                animalQuery = animalQuery.Where(a => a.Type == type);
             }
-            if (!string.IsNullOrWhiteSpace(size))
+            if (size != null)
             {
-                bool animalSizeParsed = int.TryParse(size, out int animalSizeNumber);
-                if (!animalSizeParsed || animalSizeNumber >= Enum.GetNames(typeof(AnimalSize)).Length || animalSizeNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(AnimalSize)}");
-
-                animalQuery = animalQuery.Where(a => (int)a.Size == animalSizeNumber);
+                animalQuery = animalQuery.Where(a => a.Size == size);
             }
-            if (!string.IsNullOrWhiteSpace(status))
+            if (status != null)
             {
-                bool animalStatusParsed = int.TryParse(status, out int animalStatusNumber);
-                if (!animalStatusParsed || animalStatusNumber >= Enum.GetNames(typeof(AnimalStatus)).Length || animalStatusNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(AnimalStatus)}");
-
-                animalQuery = animalQuery.Where(a => (int)a.Status == animalStatusNumber);
+                animalQuery = animalQuery.Where(a => a.Status == status);
             }
-            if (!string.IsNullOrWhiteSpace(gender))
+            if (gender != null)
             {
-                bool animalGenderParsed = int.TryParse(gender, out int animalGenderNumber);
-                if (!animalGenderParsed || animalGenderNumber >= Enum.GetNames(typeof(Gender)).Length || animalGenderNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(Gender)}");
-
-                animalQuery = animalQuery.Where(a => (int)a.Gender == animalGenderNumber);
+                animalQuery = animalQuery.Where(a => a.Gender == gender);
             }
-            if (!string.IsNullOrWhiteSpace(color))
+            if (color != null)
             {
-                bool animalColorParsed = int.TryParse(color, out int animalColorNumber);
-                if (!animalColorParsed || animalColorNumber >= Enum.GetNames(typeof(AnimalColor)).Length || animalColorNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(AnimalColor)}");
-
-                animalQuery = animalQuery.Where(a => (int)a.Color == animalColorNumber);
+                animalQuery = animalQuery.Where(a => a.Color == color);
             }
             if (breedId != null)
             {

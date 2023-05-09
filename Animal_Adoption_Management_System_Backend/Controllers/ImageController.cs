@@ -1,6 +1,7 @@
 ﻿using Animal_Adoption_Management_System_Backend.Authorization;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
@@ -68,7 +69,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetFilteredImages(string? uploaderName, string? animalName, string? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetFilteredImages(string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
         {
             IEnumerable<Image> images = await _imageService.GetFilteredImagesAsync(uploaderName, animalName, animalType, takenBefore, takenAfter);
             IEnumerable<ImageDTOWithDetails> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithDetails>>(images);

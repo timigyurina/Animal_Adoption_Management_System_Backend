@@ -32,7 +32,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return await AddAsync(imageToUpload);
         }
 
-        public async Task<IEnumerable<Image>> GetFilteredImagesAsync(string? uploaderName, string? animalName, string? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        public async Task<IEnumerable<Image>> GetFilteredImagesAsync(string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
         {
             IQueryable<Image> imageQuery = _context.Images
                 .Include(i => i.Animal)
@@ -48,13 +48,9 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             {
                 imageQuery = imageQuery.Where(i => i.Animal.Name.ToLower().Contains(animalName.ToLower()));
             }
-            if (!string.IsNullOrWhiteSpace(animalType))
+            if (animalType != null)
             {
-                bool animalTypeParsed = int.TryParse(animalType, out int animalTypeNumber);
-                if (!animalTypeParsed || animalTypeNumber >= Enum.GetNames(typeof(AnimalType)).Length || animalTypeNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(AnimalType)}");
-
-                imageQuery = imageQuery.Where(i => (int)i.Animal.Type == animalTypeNumber);
+                imageQuery = imageQuery.Where(i => i.Animal.Type == animalType);
             }
             if (takenBefore != null)
             {
