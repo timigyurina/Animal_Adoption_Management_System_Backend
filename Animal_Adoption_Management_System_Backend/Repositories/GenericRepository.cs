@@ -103,5 +103,36 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
                 TotalCount = totalSize
             };
         }
+        
+        public async Task<PagedResult<TResult>> GetPagedAndFiltered<TResult>(
+            QueryParameters queryParameters, 
+            IEnumerable<Expression<Func<T, bool>>> filters,
+            string includeProperties = "")
+        {
+            IQueryable<T> query = _dbSet.AsNoTracking();
+
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                query = query.Include(includeProperty);
+
+            if (filters.Any())
+            {
+                foreach (var filter in filters)
+                    query = query.Where(filter);
+            }
+
+            List<TResult> items = await query
+                .Skip(queryParameters.StartIndex)
+                .Take(queryParameters.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider) 
+                .ToListAsync();
+
+            return new PagedResult<TResult>
+            {
+                Items = items,
+                CurrentPage = queryParameters.PageNumber,
+                PageSize = queryParameters.PageSize,
+                TotalCount = query.ToList().Count
+            };
+        }
     }
 }
