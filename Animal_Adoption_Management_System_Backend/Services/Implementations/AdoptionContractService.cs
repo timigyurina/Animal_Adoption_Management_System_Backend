@@ -2,10 +2,12 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -27,10 +29,10 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
         }
 
         public async Task<IEnumerable<AdoptionContract>> GetFilteredAdoptionContractsAsync(
-            string? animalName, 
-            string? applierName, 
-            DateTime? dateAfter, 
-            DateTime? dateBefore, 
+            string? animalName,
+            string? applierName,
+            DateTime? dateAfter,
+            DateTime? dateBefore,
             bool? isActive)
         {
             IQueryable<AdoptionContract> adoptionContractQuery = _context.AdoptionContracts.AsNoTracking();
@@ -52,7 +54,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             {
                 adoptionContractQuery = adoptionContractQuery.Where(a => a.ContractDate < dateBefore);
             }
-            if(isActive != null)
+            if (isActive != null)
             {
                 adoptionContractQuery = adoptionContractQuery.Where(a => a.IsActive == isActive);
             }
@@ -100,6 +102,38 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .Include(a => a.Applier)
                 .AsNoTracking()
                 .FirstAsync(a => a.Id == id);
+        }
+
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredAdoptionContractsAsync<TResult>(QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, bool? isActive)
+        {
+            List<Expression<Func<AdoptionContract, bool>>> filters = new();
+            if (!string.IsNullOrWhiteSpace(animalName))
+            {
+                Expression<Func<AdoptionContract, bool>> animalNamePredicate = a => a.Animal.Name.ToLower().Contains(animalName.ToLower());
+                filters.Add(animalNamePredicate);
+            }
+            if (!string.IsNullOrWhiteSpace(applierName))
+            {
+                Expression<Func<AdoptionContract, bool>> applierNamePredicate = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) || a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
+                filters.Add(applierNamePredicate);
+            }
+            if (dateAfter != null)
+            {
+                Expression<Func<AdoptionContract, bool>> dateAfterPredicate = a => a.ContractDate >= dateAfter;
+                filters.Add(dateAfterPredicate);
+            }
+            if (dateBefore != null)
+            {
+                Expression<Func<AdoptionContract, bool>> dateBeforePredicate = a => a.ContractDate < dateBefore;
+                filters.Add(dateBeforePredicate);
+            }
+            if (isActive != null)
+            {
+                Expression<Func<AdoptionContract, bool>> isActivePredicate = a => a.IsActive == isActive;
+                filters.Add(isActivePredicate);
+            }
+
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
         }
     }
 }

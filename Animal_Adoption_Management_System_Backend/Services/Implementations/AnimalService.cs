@@ -7,6 +7,8 @@ using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -150,11 +152,69 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             return animal;
         }
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredAnimalsAsync<TResult>(QueryParameters queryParameters, string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
+        {
+            List<Expression<Func<Animal, bool>>> filters = new();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                Expression<Func<Animal, bool>> namePredicate = a => a.Name.ToLower().Contains(name.ToLower());
+                filters.Add(namePredicate);
+            }
+            if (type != null)
+            {
+                Expression<Func<Animal, bool>> typePredicate = a => a.Type == type;
+                filters.Add(typePredicate);
+            }
+            if (size != null)
+            {
+                Expression<Func<Animal, bool>> sizePredicate = a => a.Size == size;
+                filters.Add(sizePredicate);
+            }
+            if (status != null)
+            {
+                Expression<Func<Animal, bool>> statusPredicate = a => a.Status == status;
+                filters.Add(statusPredicate);
+            }
+            if (gender != null)
+            {
+                Expression<Func<Animal, bool>> genderPredicate = a => a.Gender == gender;
+                filters.Add(genderPredicate);
+            }
+            if (color != null)
+            {
+                Expression<Func<Animal, bool>> colorPredicate = a => a.Color == color;
+                filters.Add(colorPredicate);
+            }
+            if (breedId != null)
+            {
+                Expression<Func<Animal, bool>> breedredicate = a => a.Breed.Id == breedId;
+                filters.Add(breedredicate);
+            }
+            if (isSterilised != null)
+            {
+                Expression<Func<Animal, bool>> isSterilisedPredicate = a => a.IsSterilised == isSterilised;
+                filters.Add(isSterilisedPredicate);
+            }
+            if (bornAfter != null)
+            {
+                Expression<Func<Animal, bool>> bornAfterPredicate = a => a.BirthDate >= bornAfter;
+                filters.Add(bornAfterPredicate);
+            }
+            if (bornBefore != null)
+            {
+                Expression<Func<Animal, bool>> bornBeforePredicate = a => a.BirthDate < bornBefore;
+                filters.Add(bornBeforePredicate);
+            }
+
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
+        }
+
 
         private void CheckAnimalAndAnimalTypeBreedMatch(Animal entity)
         {
             if (entity.Type != entity.Breed.Type)
                 throw new BadRequestException("The type of the Animal and the type of the provided Breed do not match");
         }
+
     }
 }

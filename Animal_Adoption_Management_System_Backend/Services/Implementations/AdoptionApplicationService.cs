@@ -2,10 +2,12 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -58,8 +60,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             }
             if (status != null)
             {
-                if ((int)status > Enum.GetValues(typeof(ApplicationStatus)).Length - 1 || (int)status < 0)
-                    throw new BadRequestException("Invalid ApplicationStatus");
                 adoptionApplicationQuery = adoptionApplicationQuery.Where(a => a.Status == status);
             }
 
@@ -123,6 +123,38 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             .Include(a => a.Applier)
             .AsNoTracking()
             .FirstAsync(a => a.Id == id);
+        }
+
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredAdoptionApplicationsAsync<TResult>(QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status)
+        {
+            List<Expression<Func<AdoptionApplication, bool>>> filters = new();
+
+            if (!string.IsNullOrWhiteSpace(animalName))
+            {
+                Expression<Func<AdoptionApplication, bool>> animalNamePredicate = a => a.Animal.Name.ToLower().Contains(animalName.ToLower());
+                filters.Add(animalNamePredicate);
+            }
+            if (!string.IsNullOrWhiteSpace(applierName))
+            {
+                Expression<Func<AdoptionApplication, bool>> applierNamePredicate = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) ||
+                                                                                 a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
+            }
+            if (dateAfter != null)
+            {
+                Expression<Func<AdoptionApplication, bool>> dateAfterPredicate = a => a.ApplicationDate >= dateAfter;
+                filters.Add(dateAfterPredicate);
+            }
+            if (dateBefore != null)
+            {
+                Expression<Func<AdoptionApplication, bool>> dateBeforePredicate = a => a.ApplicationDate < dateBefore;
+                filters.Add(dateBeforePredicate);
+            }
+            if (status != null)
+            {
+                Expression<Func<AdoptionApplication, bool>> statusPredicate = a => a.Status == status;
+                filters.Add(statusPredicate);
+            }
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Animal,Applier");
         }
     }
 }

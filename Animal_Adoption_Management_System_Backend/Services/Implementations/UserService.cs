@@ -2,10 +2,10 @@
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -251,6 +251,54 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             await _userManager.UpdateAsync(user);
             return user;
+        }
+
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredUsersAsync<TResult>(QueryParameters queryParameters, string? name, string? email, bool? isActive, bool? isContactOfShelter, string? shelterName, DateTime? bornAfter, DateTime? bornBefore)
+        {
+            IQueryable<User> userQuery = _userManager.Users.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                userQuery = userQuery.Where(u => u.FirstName.ToLower().Contains(name.ToLower()) || u.LastName.ToLower().Contains(name.ToLower()));
+            }
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                userQuery = userQuery.Where(u => u.Email.ToLower().Contains(email.ToLower()));
+            }
+            if (!string.IsNullOrWhiteSpace(shelterName))
+            {
+                userQuery = userQuery.Where(u => u.Shelter != null && u.Shelter.Name.Contains(shelterName.ToLower()));
+            }
+            if (isActive != null)
+            {
+                userQuery = userQuery.Where(u => u.IsActive == isActive);
+            }
+            if (isContactOfShelter != null)
+            {
+                userQuery = userQuery.Where(u => u.IsContactOfShelter == isContactOfShelter);
+            }
+            if (bornAfter != null)
+            {
+                userQuery = userQuery.Where(u => u.DateOfBirth >= bornAfter);
+            }
+            if (bornBefore != null)
+            {
+                userQuery = userQuery.Where(u => u.DateOfBirth < bornBefore);
+            }
+
+            List<TResult> items = await userQuery
+                .Skip(queryParameters.StartIndex)
+                .Take(queryParameters.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            return new PagedResult<TResult>
+            {
+                Items = items,
+                CurrentPage = queryParameters.PageNumber,
+                PageSize = queryParameters.PageSize,
+                TotalCount = userQuery.ToList().Count
+            };
         }
 
         private void CheckIfExists(string id)

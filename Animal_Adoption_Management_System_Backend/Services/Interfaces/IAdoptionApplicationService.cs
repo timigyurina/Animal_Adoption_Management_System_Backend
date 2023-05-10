@@ -1,5 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
@@ -13,5 +14,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task SetAdoptionApplicationStatusForContractCreation(Animal animal, User applier);
 
         Task<AdoptionApplication> GetWithAnimalShelterDetailsAsync(int id);
+        Task<PagedResult<TResult>> GetPagedAndFilteredAdoptionApplicationsAsync<TResult>(QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
@@ -13,5 +14,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task<Animal> UpdateSterilisation(int id, UpdateSterilisationDTO sterilisationDate);
         Task<Animal> UpdateStatus(int id, AnimalStatus newStatus);
         Task<Animal> GetWithAnimalShelterDetailsAsync(int animalId);
+        Task<PagedResult<TResult>> GetPagedAndFilteredAnimalsAsync<TResult>(QueryParameters queryParameters, string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore);
     }
 }

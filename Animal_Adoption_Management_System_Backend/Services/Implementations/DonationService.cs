@@ -2,10 +2,12 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -41,7 +43,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             if (!string.IsNullOrWhiteSpace(donatorName))
             {
                 donationQuery = donationQuery
-                    .Where(d => d.Donator.FirstName.ToLower().Contains(donatorName.ToLower()) || 
+                    .Where(d => d.Donator.FirstName.ToLower().Contains(donatorName.ToLower()) ||
                                 d.Donator.LastName.ToLower().Contains(donatorName.ToLower()));
             }
             if (minAmount != null)
@@ -62,9 +64,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             }
             if (status != null)
             {
-                if ((int)status > Enum.GetValues(typeof(DonationStatus)).Length - 1 || (int)status < 0)
-                    throw new BadRequestException("Invalid DonationStatus");
-
                 donationQuery = donationQuery.Where(d => d.Status == status);
             }
 
@@ -95,6 +94,50 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             await UpdateAsync(donationToUpdate);
 
             return donationToUpdate;
+        }
+
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredDonationsAsync<TResult>(QueryParameters queryParameters, string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status)
+        {
+            List<Expression<Func<Donation, bool>>> filters = new();
+
+            if (!string.IsNullOrWhiteSpace(shelterName))
+            {
+                Expression<Func<Donation, bool>> shelterNamePredicated = d => d.Shelter.Name.ToLower().Contains(shelterName.ToLower());
+                filters.Add(shelterNamePredicated);
+            }
+            if (!string.IsNullOrWhiteSpace(donatorName))
+            {
+                Expression<Func<Donation, bool>> donatorNamePredicated = d => d.Donator.FirstName.ToLower().Contains(donatorName.ToLower()) ||
+                                                                         d.Donator.LastName.ToLower().Contains(donatorName.ToLower());
+                filters.Add(donatorNamePredicated);
+            }
+            if (minAmount != null)
+            {
+                Expression<Func<Donation, bool>> minAmountPredicated = d => d.Amount >= minAmount;
+                filters.Add(minAmountPredicated);
+            }
+            if (maxAmount != null)
+            {
+                Expression<Func<Donation, bool>> maxAmountPredicated = d => d.Amount < maxAmount;
+                filters.Add(maxAmountPredicated);
+            }
+            if (dateAfter != null)
+            {
+                Expression<Func<Donation, bool>> dateAfterPredicated = d => d.Date >= dateAfter;
+                filters.Add(dateAfterPredicated);
+            }
+            if (dateBefore != null)
+            {
+                Expression<Func<Donation, bool>> dateBeforePredicated = d => d.Date < dateBefore;
+
+            }
+            if (status != null)
+            {
+                Expression<Func<Donation, bool>> statusPredicated = d => d.Status == status;
+                filters.Add(statusPredicated);
+            }
+
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Shelter,Donator");
         }
     }
 }
