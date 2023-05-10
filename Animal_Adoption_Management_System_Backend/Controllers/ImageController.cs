@@ -76,6 +76,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(imageDTOs);
         }
 
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetPagedAndFilteredImages([FromQuery] QueryParameters queryParameters, string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        {
+            PagedResult<ImageDTOWithDetails> imageDTOs = await _imageService.GetPagedAndFilteredImagesAsync<ImageDTOWithDetails>(queryParameters, uploaderName, animalName, animalType, takenBefore, takenAfter);
+            return Ok(imageDTOs);
+        }
+
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPost]
         [RequestSizeLimit(5 * 1024 * 1024)]

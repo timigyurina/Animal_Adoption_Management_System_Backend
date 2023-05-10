@@ -26,11 +26,11 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
 
         public AdoptionContractController(
-            IMapper mapper, 
-            IPermissionChecker permissionChecker, 
-            IAdoptionContractService adoptionContractService, 
-            IManagedAdoptionContractService managedAdoptionContractService, 
-            IAdoptionApplicationService adoptionApplicationService, 
+            IMapper mapper,
+            IPermissionChecker permissionChecker,
+            IAdoptionContractService adoptionContractService,
+            IManagedAdoptionContractService managedAdoptionContractService,
+            IAdoptionApplicationService adoptionApplicationService,
             IAnimalService animalService, IAnimalShelterService animalShelterService)
         {
             _mapper = mapper;
@@ -89,6 +89,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             IEnumerable<AdoptionContract> adoptionContracts = await _adoptionContractService.GetFilteredAdoptionContractsAsync(animalName, applierName, dateAfter, dateBefore, isActive);
             IEnumerable<AdoptionContractDTOWithDetails> adoptionContractDTOs = _mapper.Map<IEnumerable<AdoptionContractDTOWithDetails>>(adoptionContracts);
+            return Ok(adoptionContractDTOs);
+        }
+
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<AdoptionContractDTOWithDetails>>> GetPagedAndFilteredAdoptionContracts([FromQuery] QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, bool? isActive)
+        {
+            PagedResult<AdoptionContractDTOWithDetails> adoptionContractDTOs = await _adoptionContractService.GetPagedAndFilteredAdoptionContractsAsync<AdoptionContractDTOWithDetails>(queryParameters, animalName, applierName, dateAfter, dateBefore, isActive);
             return Ok(adoptionContractDTOs);
         }
 

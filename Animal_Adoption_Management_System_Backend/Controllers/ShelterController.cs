@@ -36,7 +36,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<ShelterDTO>>> GetPagedAnimals([FromQuery] QueryParameters queryParameters)
+        public async Task<ActionResult<PagedResult<ShelterDTO>>> GetPagedShelters([FromQuery] QueryParameters queryParameters)
         {
             PagedResult<ShelterDTO> pagedResult = await _shelterService.GetAllAsync<ShelterDTO>(queryParameters);
             return Ok(pagedResult);
@@ -65,6 +65,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             IEnumerable<Shelter> shelters = await _shelterService.GetFilteredSheltersAsync(name, contactPersonName, isActive);
             IEnumerable<ShelterDTOWithDetails> shelterDTOs = _mapper.Map<IEnumerable<ShelterDTOWithDetails>>(shelters);
+            return Ok(shelterDTOs);
+        }
+
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<ShelterDTOWithDetails>>> GetPagedAndFilteredShelters([FromQuery] QueryParameters queryParameters, string? name, string? contactPersonName, bool? isActive)
+        {
+            PagedResult<ShelterDTOWithDetails> shelterDTOs = await _shelterService.GetPagedAndFilteredSheltersAsync<ShelterDTOWithDetails>(queryParameters, name, contactPersonName, isActive);
             return Ok(shelterDTOs);
         }
 

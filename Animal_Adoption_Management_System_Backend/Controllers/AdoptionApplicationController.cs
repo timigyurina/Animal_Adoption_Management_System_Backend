@@ -72,6 +72,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(adoptionApplicationDTOs);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<AdoptionApplicationDTOWithDetails>>> GetPagedAndFilteredAdoptionApplications([FromQuery] QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status)
+        {
+            PagedResult<AdoptionApplicationDTOWithDetails> adoptionApplicationDTOs = await _adoptionApplicationService.GetPagedAndFilteredAdoptionApplicationsAsync<AdoptionApplicationDTOWithDetails>(queryParameters, animalName, applierName, dateAfter, dateBefore, status);
+            return Ok(adoptionApplicationDTOs);
+        }
+
         [HttpPost]
         [Authorize(Policy = "MinimalAge")]
         public async Task<ActionResult<AdoptionApplicationDTO>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)

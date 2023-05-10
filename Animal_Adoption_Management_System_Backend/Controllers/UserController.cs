@@ -78,6 +78,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(userDTOs);
         }
 
+        [Authorize(Roles = "Administrator")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<UserDTOWithDetails>>> GetPagedAndFilteredUsers([FromQuery] QueryParameters queryParameters, string? name, string? email, bool? isActive, bool? isContactOfShelter, string? shelterName, DateTime? bornAfter, DateTime? bornBefore)
+        {
+            PagedResult<UserDTOWithDetails> userDTOs = await _userService.GetPagedAndFilteredUsersAsync<UserDTOWithDetails>(queryParameters, name, email, isActive, isContactOfShelter, shelterName, bornAfter, bornBefore);
+            return Ok(userDTOs);
+        }
+
         [HttpGet("{id}/donation")]
         public async Task<ActionResult<ICollection<DonationDTOWithDetails>>> GetUserDonations(string id)
         {

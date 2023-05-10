@@ -50,11 +50,17 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<AnimalBreedDTO>>> GetFilteredBreeds(string? name, string? type, AnimalType? t)
+        public async Task<ActionResult<IEnumerable<AnimalBreedDTO>>> GetFilteredBreeds(string? name, AnimalType? type)
         {
-            //IEnumerable<AnimalBreed> breeds = await _animalBreedService.GetFilteredBreedsAsync(name, type);
-            IEnumerable<AnimalBreed> breeds = await _animalBreedService.GetFilteredBreedsAsync(name, t);
+            IEnumerable<AnimalBreed> breeds = await _animalBreedService.GetFilteredBreedsAsync(name, type);
             IEnumerable<AnimalBreedDTO> breedDTOs = _mapper.Map<IEnumerable<AnimalBreedDTO>>(breeds);
+            return Ok(breedDTOs);
+        }
+
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<AnimalBreedDTO>>> GetPagedAndFilteredBreeds([FromQuery] QueryParameters queryParameters, string? name, AnimalType? type)
+        {
+            PagedResult<AnimalBreedDTO> breedDTOs = await _animalBreedService.GetPagedAndFilteredBreedsAsync<AnimalBreedDTO>(queryParameters, name, type);
             return Ok(breedDTOs);
         }
 

@@ -77,6 +77,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(animalDTOs);
         }
 
+        [Authorize]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetPagedAndFilteredAnimals([FromQuery] QueryParameters queryParameters, string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
+        {
+            PagedResult<AnimalDTO> animalDTOs = await _animalService.GetPagedAndFilteredAnimalsAsync<AnimalDTO>(queryParameters, name, type, size, status, gender, color, breedId, isSterilised, bornAfter, bornBefore);
+            return Ok(animalDTOs);
+        }
+
         [HttpGet("{id}/image")]
         public async Task<ActionResult<AnimalDTOWithDetails>> GetAnimalImage(int id)
         {

@@ -72,6 +72,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(donationDTOs);
         }
 
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<DonationDTOWithDetails>>> GetPagedAndFilteredDonations([FromQuery] QueryParameters queryParameters, string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status)
+        {
+            PagedResult<DonationDTOWithDetails> donationDTOs = await _donationService.GetPagedAndFilteredDonationsAsync<DonationDTOWithDetails>(queryParameters, shelterName, donatorName, minAmount, maxAmount, dateAfter, dateBefore, status);
+            return Ok(donationDTOs);
+        }
+
         [Authorize(Policy = "MinimalAge")]
         [HttpPost]
         public async Task<ActionResult<DonationDTO>> CreateDonation(CreateDonationDTO donationDTO)
