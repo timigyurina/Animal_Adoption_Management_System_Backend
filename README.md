@@ -1,6 +1,6 @@
-# Animal_Adoption_Management_System_Backend# Animal Adoption Management System
+# Animal Adoption Management System (Backend)
 
-#### *Please note that this is an ongoing pet project of mine, continuously growing and evolving and may not yet have all features properly implemented*
+#### *Please note that this is an ongoing pet project of mine, continuously growing and evolving and may not yet have all features implemented properly*
  
 ## About this API
 This is the backend of a complex system that aims to unify and centralise the management of animals living in shelters and looking for a possible adopter providing them a new home. 
@@ -23,7 +23,7 @@ The main functionality for possible adopters is the opportunity to create so-cal
  
 ## Images
 ##### 1. UML diagram of the model classes
-<img src="./Images/Animal_Adoption_Management_System_class_diagram.jpeg">
+<img src="./Animal_Adoption_Management_System_class_diagram.jpeg">
 
 
 <!-- ##### 2. Controllers and their endpoints
