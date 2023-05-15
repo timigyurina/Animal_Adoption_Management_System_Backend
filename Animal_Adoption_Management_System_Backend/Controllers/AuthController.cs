@@ -12,15 +12,17 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IShelterService _shelterService;
+        private readonly IUserService _userService;
         private readonly IAuthManager _authManager;
         private readonly ILogger<AuthController> _logger;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthController(IAuthManager authManager, ILogger<AuthController> logger, IUnitOfWork unitOfWork)
+        public AuthController(IAuthManager authManager, ILogger<AuthController> logger, IShelterService shelterService, IUserService userService)
         {
             _authManager = authManager;
             _logger = logger;
-            _unitOfWork = unitOfWork;
+            _shelterService = shelterService;
+            _userService = userService;
         }
 
         [HttpPost]
@@ -32,16 +34,18 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             {
                 AuthResponseDTO? response = await _authManager.Login(loginDTO);
                 if (response == null)
-                    return Unauthorized();
+                    return Unauthorized(new ResponseMessage { Message = "Unauthorized" });
 
-                CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
-                Response.Cookies.Append("X-Access-Token", response.Token, options);
-                Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, options);
-                Response.Cookies.Append("X-UserId", response.UserId, options);
-                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), options);
+                CookieOptions httpOnlyCookieOptions = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+                CookieOptions nonHttpOnlyCookieOptions = new() { HttpOnly = false, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+                Response.Cookies.Append("X-Access-Token", response.Token, httpOnlyCookieOptions);
+                Response.Cookies.Append("X-Refresh-Token", response.RefreshToken, httpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserId", response.UserId, httpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserRoles", string.Join(',', response.Roles), nonHttpOnlyCookieOptions);
+                Response.Cookies.Append("X-UserEmail", string.Join(',', response.UserEmail), nonHttpOnlyCookieOptions);
 
                 _logger.LogInformation($"User {loginDTO.Email} has logged in successfully at {DateTime.Now}");
-                return Ok();
+                return Ok(new ResponseMessage { Message = "Successful login" });
             }
             catch (Exception exc)
             {
@@ -58,11 +62,12 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             Response.Cookies.Append("X-Refresh-Token", "", options);
             Response.Cookies.Append("X-UserId", "", options);
             Response.Cookies.Append("X-UserRoles", "", options);
-            return Ok();
+            Response.Cookies.Append("X-UserEmail", "", options);
+            return Ok(new ResponseMessage { Message = "Successful logout" });
         }
 
-        [HttpGet("validateUser")]
         [Authorize]
+        [HttpGet("validateUser")]
         public ActionResult ValidateUser()
         {
             return Ok();
@@ -78,14 +83,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "Adopter");
                 if (errors.Any())
                 {
+                    List<string> errorList = new List<string>();
                     foreach (var error in errors)
-                    {
-                        ModelState.AddModelError(error.Code, error.Description);
-                    }
-                    return BadRequest(ModelState);
+                        errorList.Add(error.Description);
+
+                    return BadRequest(new ResponseMessage { Message = string.Join(',', errorList) });
                 }
                 _logger.LogInformation($"User {registerUserDTO.Email} has registered successfully at {DateTime.Now}");
-                return Ok();
+                return Ok(new ResponseMessage { Message = $"Successful registration for {registerUserDTO.Email}" });
             }
             catch (Exception exc)
             {
@@ -94,8 +99,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             }
         }
 
-        [HttpPost]
         [Authorize(Roles = "Administrator")]
+        [HttpPost]
         [Route("registerAdmin")]
         public async Task<ActionResult> RegisterAdmin(RegisterUserDTO registerUserDTO)
         {
@@ -105,11 +110,11 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "Administrator");
                 if (errors.Any())
                 {
+                    List<string> errorList = new List<string>();
                     foreach (var error in errors)
-                    {
-                        ModelState.AddModelError(error.Code, error.Description);
-                    }
-                    return BadRequest(ModelState);
+                        errorList.Add(error.Description);
+
+                    return BadRequest(new ResponseMessage { Message = string.Join(',', errorList) });
                 }
                 _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as an Administrator at {DateTime.Now}");
                 return Ok();
@@ -121,26 +126,26 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             }
         }
 
-        [HttpPost]
         [Authorize(Roles = "Administrator")]
+        [HttpPost]
         [Route("registerEmployee")]
         public async Task<ActionResult> RegisterEmployee(RegisterShelterEmployeeDTO registerUserDTO)
         {
             _logger.LogInformation($"Employee registration attempt for {registerUserDTO.Email}");
-            Shelter shelter = await _unitOfWork.ShelterService.GetAsync(registerUserDTO.ShelterId);
+            Shelter shelter = await _shelterService.GetAsync(registerUserDTO.ShelterId);
             try
             {
                 IEnumerable<IdentityError> errors = await _authManager.RegisterAs(registerUserDTO, "ShelterEmployee");
                 if (errors.Any())
                 {
+                    List<string> errorList = new List<string>();
                     foreach (var error in errors)
-                    {
-                        ModelState.AddModelError(error.Code, error.Description);
-                    }
-                    return BadRequest(ModelState);
+                        errorList.Add(error.Description);
+
+                    return BadRequest(new ResponseMessage { Message = string.Join(',', errorList) });
                 }
                 // Add User to Shelter as employee
-                await _unitOfWork.UserService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
+                await _userService.CreateConnectionWithShelterByEmail(shelter, registerUserDTO.Email, registerUserDTO.IsContactOfShelter);
 
                 _logger.LogInformation($"User {registerUserDTO.Email} has been registered successfully as a ShelterEmployee at {DateTime.Now}");
                 return Ok();
@@ -163,26 +168,16 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             if (authResponse == null)
                 return Unauthorized();
 
-            CookieOptions options = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
-            Response.Cookies.Append("X-Access-Token", authResponse.Token, options);
-            Response.Cookies.Append("X-Refresh-Token", authResponse.RefreshToken, options);
-            Response.Cookies.Append("X-UserId", authResponse.UserId, options);
-            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), options);
+            CookieOptions httpOnlyCookieOptions = new() { HttpOnly = true, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+            CookieOptions nonHttpOnlyCookieOptions = new() { HttpOnly = false, Secure = true, Path = "/", Expires = DateTime.Now.AddDays(1), SameSite = SameSiteMode.None };
+            Response.Cookies.Append("X-Access-Token", authResponse.Token, httpOnlyCookieOptions);
+            Response.Cookies.Append("X-Refresh-Token", authResponse.RefreshToken, httpOnlyCookieOptions);
+            Response.Cookies.Append("X-UserId", authResponse.UserId, httpOnlyCookieOptions);
+            Response.Cookies.Append("X-UserRoles", string.Join(',', authResponse.Roles), nonHttpOnlyCookieOptions);
+            Response.Cookies.Append("X-UserEmail", string.Join(',', authResponse.UserEmail), nonHttpOnlyCookieOptions);
 
             return Ok();
         }
-
-        //[HttpPost]
-        //[Route("refreshToken")]
-        //public async Task<ActionResult> RefreshToken(RefreshTokenRequestDTO request)
-        //{
-        //    AuthResponseDTO? authResponse = await _authManager.VerifyRefreshToken(request.UserId, request.Token, request.RefreshToken);
-
-        //    if (authResponse == null)
-        //        return Unauthorized();
-
-        //    return Ok(authResponse);
-        //}
 
     }
 }

@@ -5,7 +5,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
 {
     public interface IPermissionChecker
     {
-        void CheckPermissionForShelter(int id, ClaimsPrincipal user);
+        bool CheckPermissionForShelter(int id, ClaimsPrincipal user);
         void CheckPermissionForAdoptionApplication(AdoptionApplication adoptionApplicationWithDetails, ClaimsPrincipal user);
         void CheckPermissionForAdoptionContract(AdoptionContract adoptionContractWithDetails, ClaimsPrincipal user);
         void CheckPermissionForAnimal(Animal animalWithDetails, ClaimsPrincipal user);

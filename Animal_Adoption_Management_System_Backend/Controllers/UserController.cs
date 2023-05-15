@@ -19,22 +19,24 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserService _userService;
+        private readonly IShelterService _shelterService;
         private readonly IMapper _mapper;
         private readonly IPermissionChecker _permissionChecker;
 
-        public UserController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
+        public UserController(IMapper mapper, IPermissionChecker permissionChecker, IUserService userService, IShelterService shelterService)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _permissionChecker = permissionChecker;
+            _userService = userService;
+            _shelterService = shelterService;
         }
 
         [Authorize(Roles = "Administrator")]
         [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers()
         {
-            IEnumerable<User> users = await _unitOfWork.UserService.GetAllAsync();
+            IEnumerable<User> users = await _userService.GetAllAsync();
             IEnumerable<UserDTO> userDTOs = _mapper.Map<IEnumerable<UserDTO>>(users);
             return Ok(userDTOs);
         }
@@ -43,7 +45,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<UserDTO>>> GetPagedUsers([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<UserDTO> pagedResult = await _unitOfWork.UserService.GetAllAsync<UserDTO>(queryParameters);
+            PagedResult<UserDTO> pagedResult = await _userService.GetAllAsync<UserDTO>(queryParameters);
             return Ok(pagedResult);
         }
 
@@ -51,7 +53,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{email}")]
         public async Task<ActionResult<UserDTO>> GetUserByEmail(string email)
         {
-            User user = await _unitOfWork.UserService.GetByEmailAsync(email);
+            User user = await _userService.GetByEmailAsync(email);
 
             UserDTO userDTO = _mapper.Map<UserDTO>(user);
             return Ok(userDTO);
@@ -61,7 +63,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<UserDTOWithDetails>> GetUserWithDetails(string id)
         {
-            User user = await _unitOfWork.UserService.GetWithAllDetailsAsync(id);
+            User user = await _userService.GetWithAllDetailsAsync(id);
 
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO);
@@ -71,8 +73,16 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<UserDTOWithDetails>>> GetFilteredUsers(string? name, string? email, bool? isActive, bool? isContactOfShelter, string? shelterName, DateTime? bornAfter, DateTime? bornBefore)
         {
-            IEnumerable<User> users = await _unitOfWork.UserService.GetFilteredUsersAsync(name, email, isActive, isContactOfShelter, shelterName, bornAfter, bornBefore);
+            IEnumerable<User> users = await _userService.GetFilteredUsersAsync(name, email, isActive, isContactOfShelter, shelterName, bornAfter, bornBefore);
             IEnumerable<UserDTOWithDetails> userDTOs = _mapper.Map<IEnumerable<UserDTOWithDetails>>(users);
+            return Ok(userDTOs);
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<UserDTOWithDetails>>> GetPagedAndFilteredUsers([FromQuery] QueryParameters queryParameters, string? name, string? email, bool? isActive, bool? isContactOfShelter, string? shelterName, DateTime? bornAfter, DateTime? bornBefore)
+        {
+            PagedResult<UserDTOWithDetails> userDTOs = await _userService.GetPagedAndFilteredUsersAsync<UserDTOWithDetails>(queryParameters, name, email, isActive, isContactOfShelter, shelterName, bornAfter, bornBefore);
             return Ok(userDTOs);
         }
 
@@ -81,7 +91,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _permissionChecker.CheckPermissionForUserRelatedEntity(id, HttpContext.User, "Donation");
 
-            User user = await _unitOfWork.UserService.GetWithDonationDetailsAsync(id);
+            User user = await _userService.GetWithDonationDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.Donations);
         }
@@ -92,7 +102,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _permissionChecker.CheckPermissionForUserRelatedEntity(id, HttpContext.User, "Image");
 
-            User user = await _unitOfWork.UserService.GetWithImageDetailsAsync(id);
+            User user = await _userService.GetWithImageDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.Images);
         }
@@ -103,7 +113,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _permissionChecker.CheckPermissionForUserRelatedEntity(id, HttpContext.User, "Shelter");
 
-            User user = await _unitOfWork.UserService.GetWithShelterDetailsAsync(id);
+            User user = await _userService.GetWithShelterDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO);
         }
@@ -113,7 +123,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _permissionChecker.CheckPermissionForUserRelatedEntity(id, HttpContext.User, "AdoptionApplication");
 
-            User user = await _unitOfWork.UserService.GetWithAdoptionApplicationDetailsAsync(id);
+            User user = await _userService.GetWithAdoptionApplicationDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.AdoptionApplications);
         }
@@ -123,7 +133,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _permissionChecker.CheckPermissionForUserRelatedEntity(id, HttpContext.User, "AdoptionContract");
 
-            User user = await _unitOfWork.UserService.GetWithAdoptionContractDetailsAsync(id);
+            User user = await _userService.GetWithAdoptionContractDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.AdoptionsContracts);
         }
@@ -134,7 +144,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _permissionChecker.CheckPermissionForUserRelatedEntity(id, HttpContext.User, "ManagedAdoptionContract");
 
-            User user = await _unitOfWork.UserService.GetWithManagedAdoptionContractDetailsAsync(id);
+            User user = await _userService.GetWithManagedAdoptionContractDetailsAsync(id);
             UserDTOWithDetails userDTO = _mapper.Map<UserDTOWithDetails>(user);
             return Ok(userDTO.ManagedAdoptionsContracts);
         }
@@ -143,7 +153,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateUserIsActive")]
         public async Task<ActionResult<UserDTO>> UpdateStatus(string id, [FromBody] bool isActive)
         {
-            User updatedUser = await _unitOfWork.UserService.UpdateUserIsActive(id, isActive);
+            User updatedUser = await _userService.UpdateUserIsActive(id, isActive);
             UserDTO updatedUserDTO = _mapper.Map<UserDTO>(updatedUser);
             return Ok(updatedUserDTO);
         }
@@ -154,9 +164,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             Shelter? shelter = null;
             if (updateUserConnectionWithShelterDTO.ShelterId != null)
-                shelter = await _unitOfWork.ShelterService.GetAsync((int)updateUserConnectionWithShelterDTO.ShelterId);
+                shelter = await _shelterService.GetAsync((int)updateUserConnectionWithShelterDTO.ShelterId);
 
-            User updatedUser = await _unitOfWork.UserService.UpdateConnectionWithShelterById(shelter, id, updateUserConnectionWithShelterDTO.IsContactOfShelter);
+            User updatedUser = await _userService.UpdateConnectionWithShelterById(shelter, id, updateUserConnectionWithShelterDTO.IsContactOfShelter);
             UserDTOWithDetails updatedUserDTOWithDetails = _mapper.Map<UserDTOWithDetails>(updatedUser);
             return Ok(updatedUserDTOWithDetails);
         }

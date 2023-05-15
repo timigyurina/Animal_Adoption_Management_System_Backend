@@ -16,36 +16,36 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class ShelterController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IShelterService _shelterService;
         private readonly IMapper _mapper;
         private readonly IPermissionChecker _permissionChecker;
 
-        public ShelterController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
+        public ShelterController(IMapper mapper, IPermissionChecker permissionChecker, IShelterService shelterService)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _permissionChecker = permissionChecker;
+            _shelterService = shelterService;
         }
 
         [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<ShelterDTO>>> GetAllShelters()
         {
-            IEnumerable<Shelter> shelters = await _unitOfWork.ShelterService.GetAllAsync();
+            IEnumerable<Shelter> shelters = await _shelterService.GetAllAsync();
             IEnumerable<ShelterDTO> shelterDTOs = _mapper.Map<IEnumerable<ShelterDTO>>(shelters);
             return Ok(shelterDTOs);
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<ShelterDTO>>> GetPagedAnimals([FromQuery] QueryParameters queryParameters)
+        public async Task<ActionResult<PagedResult<ShelterDTO>>> GetPagedShelters([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<ShelterDTO> pagedResult = await _unitOfWork.ShelterService.GetAllAsync<ShelterDTO>(queryParameters);
+            PagedResult<ShelterDTO> pagedResult = await _shelterService.GetAllAsync<ShelterDTO>(queryParameters);
             return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<ShelterDTO>> GetShelter(int id)
         {
-            Shelter shelter = await _unitOfWork.ShelterService.GetAsync(id);
+            Shelter shelter = await _shelterService.GetAsync(id);
 
             ShelterDTO shelterDTO = _mapper.Map<ShelterDTO>(shelter);
             return Ok(shelterDTO);
@@ -54,8 +54,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<ShelterDTOWithDetails>> GetShelterWithDetails(int id)
         {
-            Shelter shelterWithDetails = await _unitOfWork.ShelterService.GetWithDetailsAsync(id);
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
+            bool isEmployeeOfShelter =_permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
+            Shelter shelterWithDetails; 
+            if (isEmployeeOfShelter)
+                shelterWithDetails = await _shelterService.GetWithDetailsAsync(id);
+            else 
+                shelterWithDetails = await _shelterService.GetWithAddressAndAnimalsAsync(id);
+
             ShelterDTOWithDetails shelterDTOWithDetails = _mapper.Map<ShelterDTOWithDetails>(shelterWithDetails);
             return Ok(shelterDTOWithDetails);
         }
@@ -63,8 +68,15 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<ShelterDTOWithDetails>>> GetFilteredShelters(string? name, string? contactPersonName, bool? isActive)
         {
-            IEnumerable<Shelter> shelters = await _unitOfWork.ShelterService.GetFilteredSheltersAsync(name, contactPersonName, isActive);
+            IEnumerable<Shelter> shelters = await _shelterService.GetFilteredSheltersAsync(name, contactPersonName, isActive);
             IEnumerable<ShelterDTOWithDetails> shelterDTOs = _mapper.Map<IEnumerable<ShelterDTOWithDetails>>(shelters);
+            return Ok(shelterDTOs);
+        }
+
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<ShelterDTOWithDetails>>> GetPagedAndFilteredShelters([FromQuery] QueryParameters queryParameters, string? name, string? contactPersonName, bool? isActive)
+        {
+            PagedResult<ShelterDTOWithDetails> shelterDTOs = await _shelterService.GetPagedAndFilteredSheltersAsync<ShelterDTOWithDetails>(queryParameters, name, contactPersonName, isActive);
             return Ok(shelterDTOs);
         }
 
@@ -74,7 +86,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             Shelter shelterToCreate = _mapper.Map<Shelter>(shelterDTO);
 
-            Shelter createdShelter = await _unitOfWork.ShelterService.AddAsync(shelterToCreate);
+            Shelter createdShelter = await _shelterService.AddAsync(shelterToCreate);
 
             ShelterDTO createdShelterDTO = _mapper.Map<ShelterDTO>(createdShelter);
             return CreatedAtAction("GetShelter", new { id = createdShelter.Id }, createdShelterDTO);
@@ -84,18 +96,20 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateShelterContactInfo")]
         public async Task<ActionResult<ShelterDTO>> UpdateShelterContactInfo(int id, UpdateShelterContactInfoDTO shelterDTO)
         {
-            Shelter shelterToUpdate = await _unitOfWork.ShelterService.GetWithAddressAsync(id);
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
+            Shelter shelterToUpdate = await _shelterService.GetWithAddressAsync(id);
+            bool isEmployeeOfShelter = _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
+            if (!isEmployeeOfShelter)
+                throw new ForbiddenException($"Shelter");
 
             _mapper.Map(shelterDTO, shelterToUpdate);
 
             try
             {
-                await _unitOfWork.ShelterService.UpdateAsync(shelterToUpdate);
+                await _shelterService.UpdateAsync(shelterToUpdate);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await _unitOfWork.ShelterService.Exists(id))
+                if (!await _shelterService.Exists(id))
                     throw new NotFoundException(typeof(Shelter).Name, id);
                 else
                     throw;
@@ -109,8 +123,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateShelterIsActive")]
         public async Task<ActionResult<ShelterDTO>> UpdateStatus(int id, [FromBody] bool isActive)
         {
-            Shelter updatedShelter = await _unitOfWork.ShelterService.UpdateShelterIsActive(id, isActive);
-            _permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
+            Shelter updatedShelter = await _shelterService.UpdateShelterIsActive(id, isActive);
+            //_permissionChecker.CheckPermissionForShelter(id, HttpContext.User);
 
             ShelterDTO updatedShelterDTO = _mapper.Map<ShelterDTO>(updatedShelter);
             return Ok(updatedShelterDTO);
@@ -120,7 +134,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteShelter(int id)
         {
-            await _unitOfWork.ShelterService.DeleteAsync(id);
+            await _shelterService.DeleteAsync(id);
             return NoContent();
         }
     }

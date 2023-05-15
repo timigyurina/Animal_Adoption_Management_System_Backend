@@ -8,9 +8,6 @@ namespace Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs
         public IFormFile Image { get; set; }
 
         [Required]
-        public string UploaderId { get; set; }
-
-        [Required]
         public int AnimalId { get; set; }
         public DateTime? DateTaken { get; set; }
     }

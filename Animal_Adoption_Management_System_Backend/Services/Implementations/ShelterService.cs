@@ -1,10 +1,12 @@
 ﻿using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -28,7 +30,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             {
                 shelterQuery = shelterQuery
                     .Where(s => s.Employees
-                        .Any(e => e.Shelter != null && e.FirstName.ToLower().Contains(contactPersonName.ToLower()) || 
+                        .Any(e => e.Shelter != null && e.FirstName.ToLower().Contains(contactPersonName.ToLower()) ||
                                                        e.LastName.ToLower().Contains(contactPersonName.ToLower())));
             }
             if (isActive != null)
@@ -46,6 +48,18 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             return await _context.Shelters
                 .Include(s => s.Address)
+                .FirstAsync(s => s.Id == id);
+        }
+        
+        public async Task<Shelter> GetWithAddressAndAnimalsAsync(int id)
+        {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(Shelter).Name, id);
+
+            return await _context.Shelters
+                .Include(s => s.Address)
+                .Include(s => s.Animals)
+                    .ThenInclude(a => a.Animal)
                 .FirstAsync(s => s.Id == id);
         }
 
@@ -84,6 +98,33 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             await UpdateAsync(shelterToUpdate);
 
             return shelterToUpdate;
+        }
+
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredSheltersAsync<TResult>(
+            QueryParameters queryParameters,
+            string? name, string? contactPersonName, bool? isActive)
+        {
+            List<Expression<Func<Shelter, bool>>> filters = new();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                Expression<Func<Shelter, bool>> namePredicate = s => s.Name.ToLower().Contains(name.ToLower());
+                filters.Add(namePredicate);
+            }
+            if (!string.IsNullOrWhiteSpace(contactPersonName))
+            {
+                Expression<Func<Shelter, bool>> contactPersonNamePredicate = s => s.Employees
+                        .Any(e => e.IsContactOfShelter && (e.FirstName.ToLower().Contains(contactPersonName.ToLower()) ||
+                                                       e.LastName.ToLower().Contains(contactPersonName.ToLower())));
+                filters.Add(contactPersonNamePredicate);
+            }
+            if (isActive != null)
+            {
+                Expression<Func<Shelter, bool>> isActivePredicate = s => s.IsActive == isActive;
+                filters.Add(isActivePredicate);
+            }
+
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Employees");
+
         }
     }
 }

@@ -3,16 +3,17 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
     public class ImageService : GenericRepository<Image>, IImageService
     {
-        private static readonly string WorkDir = AppDomain.CurrentDomain.BaseDirectory;
         public ImageService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
         }
@@ -32,7 +33,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return await AddAsync(imageToUpload);
         }
 
-        public async Task<IEnumerable<Image>> GetFilteredImagesAsync(string? uploaderName, string? animalName, string? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        public async Task<IEnumerable<Image>> GetFilteredImagesAsync(string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
         {
             IQueryable<Image> imageQuery = _context.Images
                 .Include(i => i.Animal)
@@ -41,20 +42,16 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(uploaderName))
             {
-                imageQuery = imageQuery.Where(i => i.Uploader.FirstName.ToLower().Contains(uploaderName.ToLower()) || 
+                imageQuery = imageQuery.Where(i => i.Uploader.FirstName.ToLower().Contains(uploaderName.ToLower()) ||
                                                    i.Uploader.LastName.ToLower().Contains(uploaderName.ToLower()));
             }
             if (!string.IsNullOrWhiteSpace(animalName))
             {
                 imageQuery = imageQuery.Where(i => i.Animal.Name.ToLower().Contains(animalName.ToLower()));
             }
-            if (!string.IsNullOrWhiteSpace(animalType))
+            if (animalType != null)
             {
-                bool animalTypeParsed = int.TryParse(animalType, out int animalTypeNumber);
-                if (!animalTypeParsed || animalTypeNumber >= Enum.GetNames(typeof(AnimalType)).Length || animalTypeNumber < 0)
-                    throw new BadRequestException($"Incorrect {nameof(AnimalType)}");
-
-                imageQuery = imageQuery.Where(i => (int)i.Animal.Type == animalTypeNumber);
+                imageQuery = imageQuery.Where(i => i.Animal.Type == animalType);
             }
             if (takenBefore != null)
             {
@@ -65,7 +62,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 imageQuery = imageQuery.Where(i => i.DateTaken >= takenAfter);
             }
 
-                return await imageQuery.ToListAsync();
+            return await imageQuery.ToListAsync();
         }
 
         public async Task<Image> GetWithDetailsAsync(int id)
@@ -84,17 +81,53 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
         public async Task<Image> GetWithAnimalAsync(int id)
         {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(Image).Name, id);
+
             return await _context.Images
                 .Include(i => i.Animal)
                 .AsNoTracking()
                 .FirstAsync(i => i.Id == id);
         }
 
-        private static string CreateImageFilePath(CreateImageDTO imageDTO)
+        public async Task<PagedResult<TResult>> GetPagedAndFilteredImagesAsync<TResult>(QueryParameters queryParameters, string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        {
+            List<Expression<Func<Image, bool>>> filters = new();
+
+            if (!string.IsNullOrWhiteSpace(uploaderName))
+            {
+                Expression<Func<Image, bool>> uploaderNamePredicate = i => i.Uploader.FirstName.ToLower().Contains(uploaderName.ToLower()) ||
+                                                   i.Uploader.LastName.ToLower().Contains(uploaderName.ToLower());
+                filters.Add(uploaderNamePredicate);
+            }
+            if (!string.IsNullOrWhiteSpace(animalName))
+            {
+                Expression<Func<Image, bool>> animalNamePredicate = i => i.Animal.Name.ToLower().Contains(animalName.ToLower());
+                filters.Add(animalNamePredicate);
+            }
+            if (animalType != null)
+            {
+                Expression<Func<Image, bool>> animalTypePredicate = i => i.Animal.Type == animalType;
+                filters.Add(animalTypePredicate);
+            }
+            if (takenBefore != null)
+            {
+                Expression<Func<Image, bool>> takenBeforePredicate = i => i.DateTaken < takenBefore;
+                filters.Add(takenBeforePredicate);
+            }
+            if (takenAfter != null)
+            {
+                Expression<Func<Image, bool>> takenAfterPredicate = i => i.DateTaken >= takenAfter;
+                filters.Add(takenAfterPredicate);
+            }
+
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Animal,Uploader");
+        }
+
+        private string CreateImageFilePath(CreateImageDTO imageDTO)
         {
             string uniqueFileName = GetUniqueFileName(imageDTO.Image.FileName);
-            string uploads = Path.Combine(WorkDir, "Animals", "Images", imageDTO.AnimalId.ToString());
-            string filePath = Path.Combine(uploads, uniqueFileName);
+            string filePath = Path.Combine("Images", "Animals", imageDTO.AnimalId.ToString(), uniqueFileName);
             return filePath;
         }
 

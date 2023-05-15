@@ -15,22 +15,22 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class AdoptionApplicationController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAdoptionApplicationService _adoptionApplicationService;
         private readonly IMapper _mapper;
         private readonly IPermissionChecker _permissionChecker;
 
-        public AdoptionApplicationController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
+        public AdoptionApplicationController(IMapper mapper, IPermissionChecker permissionChecker, IAdoptionApplicationService adoptionApplicationService)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _permissionChecker = permissionChecker;
+            _adoptionApplicationService = adoptionApplicationService;
         }
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<AdoptionApplicationDTO>>> GetAllAdoptionApplications()
         {
-            IEnumerable<AdoptionApplication> adoptionApplications = await _unitOfWork.AdoptionApplicationService.GetAllAsync();
+            IEnumerable<AdoptionApplication> adoptionApplications = await _adoptionApplicationService.GetAllAsync();
             IEnumerable<AdoptionApplicationDTO> adoptionApplicationDTOs = _mapper.Map<IEnumerable<AdoptionApplicationDTO>>(adoptionApplications);
             return Ok(adoptionApplicationDTOs);
         }
@@ -39,14 +39,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<AdoptionApplicationDTO>>> GetPagedAdoptionApplications([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<AdoptionApplicationDTO> pagedResult = await _unitOfWork.AdoptionApplicationService.GetAllAsync<AdoptionApplicationDTO>(queryParameters);
+            PagedResult<AdoptionApplicationDTO> pagedResult = await _adoptionApplicationService.GetAllAsync<AdoptionApplicationDTO>(queryParameters);
             return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<AdoptionApplicationDTO>> GetAdoptionApplication(int id)
         {
-            AdoptionApplication adoptionApplication = await _unitOfWork.AdoptionApplicationService.GetAsync(id);
+            AdoptionApplication adoptionApplication = await _adoptionApplicationService.GetAsync(id);
 
             AdoptionApplicationDTO adoptionApplicationDTO = _mapper.Map<AdoptionApplicationDTO>(adoptionApplication);
             return Ok(adoptionApplicationDTO);
@@ -56,7 +56,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<AdoptionApplicationDTOWithDetails>> GetAdoptionApplicationWithDetails(int id)
         {
             // Check if User is Applier of this AdApp or Employee at the Shelter of the Animal 
-            AdoptionApplication adoptionApplicationWithDetails = await _unitOfWork.AdoptionApplicationService.GetWithAnimalShelterDetailsAsync(id);
+            AdoptionApplication adoptionApplicationWithDetails = await _adoptionApplicationService.GetWithAnimalShelterDetailsAsync(id);
             _permissionChecker.CheckPermissionForAdoptionApplication(adoptionApplicationWithDetails, HttpContext.User);
 
             AdoptionApplicationDTOWithDetails adoptionApplicationDTOWithDetails = _mapper.Map<AdoptionApplicationDTOWithDetails>(adoptionApplicationWithDetails);
@@ -67,8 +67,16 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<AdoptionApplicationDTO>>> GetFilteredAdoptionApplications(string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status)
         {
-            IEnumerable<AdoptionApplication> adoptionApplications = await _unitOfWork.AdoptionApplicationService.GetFilteredAdoptionApplicationsAsync(animalName, applierName, dateAfter, dateBefore, status);
+            IEnumerable<AdoptionApplication> adoptionApplications = await _adoptionApplicationService.GetFilteredAdoptionApplicationsAsync(animalName, applierName, dateAfter, dateBefore, status);
             IEnumerable<AdoptionApplicationDTOWithDetails> adoptionApplicationDTOs = _mapper.Map<IEnumerable<AdoptionApplicationDTOWithDetails>>(adoptionApplications);
+            return Ok(adoptionApplicationDTOs);
+        }
+
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<AdoptionApplicationDTOWithDetails>>> GetPagedAndFilteredAdoptionApplications([FromQuery] QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, ApplicationStatus? status)
+        {
+            PagedResult<AdoptionApplicationDTOWithDetails> adoptionApplicationDTOs = await _adoptionApplicationService.GetPagedAndFilteredAdoptionApplicationsAsync<AdoptionApplicationDTOWithDetails>(queryParameters, animalName, applierName, dateAfter, dateBefore, status);
             return Ok(adoptionApplicationDTOs);
         }
 
@@ -77,9 +85,9 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<AdoptionApplicationDTO>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)
         {
             AdoptionApplication adoptionApplicationToCreate = _mapper.Map<AdoptionApplication>(applicationDTO);
-            AdoptionApplication adoptionApplicationToCreateWithAnimalAndApplier = await _unitOfWork.AdoptionApplicationService.TryAddAnimalAndApplierToAdoptionApplication(adoptionApplicationToCreate, applicationDTO.AnimalId, applicationDTO.ApplierId);
+            AdoptionApplication adoptionApplicationToCreateWithAnimalAndApplier = await _adoptionApplicationService.TryAddAnimalAndApplierToAdoptionApplication(adoptionApplicationToCreate, applicationDTO.AnimalId, applicationDTO.ApplierId);
 
-            AdoptionApplication createdAdoptionApplication = await _unitOfWork.AdoptionApplicationService.AddAsync(adoptionApplicationToCreateWithAnimalAndApplier);
+            AdoptionApplication createdAdoptionApplication = await _adoptionApplicationService.AddAsync(adoptionApplicationToCreateWithAnimalAndApplier);
 
             AdoptionApplicationDTO createdAdoptionApplicationDTO = _mapper.Map<AdoptionApplicationDTO>(createdAdoptionApplication);
             return CreatedAtAction("GetAdoptionApplication", new { id = createdAdoptionApplication.Id }, createdAdoptionApplicationDTO);
@@ -89,10 +97,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateAdoptionApplicationStatus")]
         public async Task<ActionResult<AdoptionApplicationDTO>> UpdateStatus(int id, [FromBody] ApplicationStatus newStatus)
         {
-            AdoptionApplication adoptionApplicationWithDetails = await _unitOfWork.AdoptionApplicationService.GetWithAnimalShelterDetailsAsync(id);
+            AdoptionApplication adoptionApplicationWithDetails = await _adoptionApplicationService.GetWithAnimalShelterDetailsAsync(id);
             _permissionChecker.CheckPermissionForAdoptionApplication(adoptionApplicationWithDetails, HttpContext.User);
 
-            AdoptionApplication updatedAdoptionApplication = await _unitOfWork.AdoptionApplicationService.UpdateAdoptionApplicationStatus(id, newStatus);
+            AdoptionApplication updatedAdoptionApplication = await _adoptionApplicationService.UpdateAdoptionApplicationStatus(id, newStatus);
             AdoptionApplicationDTO updatedAdoptionApplicationDTO = _mapper.Map<AdoptionApplicationDTO>(updatedAdoptionApplication);
             return Ok(updatedAdoptionApplicationDTO);
         }
@@ -101,7 +109,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdoptionApplication(int id)
         {
-            await _unitOfWork.AdoptionApplicationService.DeleteAsync(id);
+            await _adoptionApplicationService.DeleteAsync(id);
             return NoContent();
         }
 

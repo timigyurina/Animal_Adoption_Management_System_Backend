@@ -16,23 +16,37 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class AdoptionContractController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAdoptionContractService _adoptionContractService;
+        private readonly IManagedAdoptionContractService _managedAdoptionContractService;
+        private readonly IAdoptionApplicationService _adoptionApplicationService;
+        private readonly IAnimalService _animalService;
+        private readonly IAnimalShelterService _animalShelterService;
         private readonly IMapper _mapper;
         private readonly IPermissionChecker _permissionChecker;
 
 
-        public AdoptionContractController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
+        public AdoptionContractController(
+            IMapper mapper,
+            IPermissionChecker permissionChecker,
+            IAdoptionContractService adoptionContractService,
+            IManagedAdoptionContractService managedAdoptionContractService,
+            IAdoptionApplicationService adoptionApplicationService,
+            IAnimalService animalService, IAnimalShelterService animalShelterService)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _permissionChecker = permissionChecker;
+            _adoptionContractService = adoptionContractService;
+            _managedAdoptionContractService = managedAdoptionContractService;
+            _adoptionApplicationService = adoptionApplicationService;
+            _animalService = animalService;
+            _animalShelterService = animalShelterService;
         }
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<AdoptionContractDTO>>> GetAllAdoptionContracts()
         {
-            IEnumerable<AdoptionContract> adoptionContracts = await _unitOfWork.AdoptionContractService.GetAllAsync();
+            IEnumerable<AdoptionContract> adoptionContracts = await _adoptionContractService.GetAllAsync();
             IEnumerable<AdoptionContractDTO> adoptionContractDTOs = _mapper.Map<IEnumerable<AdoptionContractDTO>>(adoptionContracts);
             return Ok(adoptionContractDTOs);
         }
@@ -41,14 +55,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<AdoptionContractDTO>>> GetPagedAdoptionContracts([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<AdoptionContractDTO> pagedResult = await _unitOfWork.AdoptionContractService.GetAllAsync<AdoptionContractDTO>(queryParameters);
+            PagedResult<AdoptionContractDTO> pagedResult = await _adoptionContractService.GetAllAsync<AdoptionContractDTO>(queryParameters);
             return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<AdoptionContractDTO>> GetAdoptionContract(int id)
         {
-            AdoptionContract adoptionContractWithDetails = await _unitOfWork.AdoptionContractService.GetWithAnimalShelterDetailsAsync(id);
+            AdoptionContract adoptionContractWithDetails = await _adoptionContractService.GetWithAnimalShelterDetailsAsync(id);
             _permissionChecker.CheckPermissionForAdoptionContract(adoptionContractWithDetails, HttpContext.User);
 
             AdoptionContractDTO adoptionContractDTO = _mapper.Map<AdoptionContractDTO>(adoptionContractWithDetails);
@@ -58,10 +72,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<AdoptionContractDTOWithManagerDetails>> GetAdoptionContractWithDetails(int id)
         {
-            AdoptionContract adoptionContractWithDetails = await _unitOfWork.AdoptionContractService.GetWithAnimalShelterDetailsAsync(id);
+            AdoptionContract adoptionContractWithDetails = await _adoptionContractService.GetWithAnimalShelterDetailsAsync(id);
             _permissionChecker.CheckPermissionForAdoptionContract(adoptionContractWithDetails, HttpContext.User);
 
-            ManagedAdoptionContract managedAdoptionContract = await _unitOfWork.ManagedAdoptionContractService.GetByAdoptionContractIdAsync(id);
+            ManagedAdoptionContract managedAdoptionContract = await _managedAdoptionContractService.GetByAdoptionContractIdAsync(id);
 
             AdoptionContractDTOWithManagerDetails adoptionContractDTOWithManagerDetails = _mapper.Map<AdoptionContractDTOWithManagerDetails>(adoptionContractWithDetails);
             adoptionContractDTOWithManagerDetails.Manager = _mapper.Map<UserDTO>(managedAdoptionContract.Manager);
@@ -73,8 +87,16 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<AdoptionContractDTOWithDetails>>> GetFilteredAdoptionContracts(string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, bool? isActive)
         {
-            IEnumerable<AdoptionContract> adoptionContracts = await _unitOfWork.AdoptionContractService.GetFilteredAdoptionContractsAsync(animalName, applierName, dateAfter, dateBefore, isActive);
+            IEnumerable<AdoptionContract> adoptionContracts = await _adoptionContractService.GetFilteredAdoptionContractsAsync(animalName, applierName, dateAfter, dateBefore, isActive);
             IEnumerable<AdoptionContractDTOWithDetails> adoptionContractDTOs = _mapper.Map<IEnumerable<AdoptionContractDTOWithDetails>>(adoptionContracts);
+            return Ok(adoptionContractDTOs);
+        }
+
+        [Authorize(Roles = "Administrator, ShelterEmployee")]
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<AdoptionContractDTOWithDetails>>> GetPagedAndFilteredAdoptionContracts([FromQuery] QueryParameters queryParameters, string? animalName, string? applierName, DateTime? dateAfter, DateTime? dateBefore, bool? isActive)
+        {
+            PagedResult<AdoptionContractDTOWithDetails> adoptionContractDTOs = await _adoptionContractService.GetPagedAndFilteredAdoptionContractsAsync<AdoptionContractDTOWithDetails>(queryParameters, animalName, applierName, dateAfter, dateBefore, isActive);
             return Ok(adoptionContractDTOs);
         }
 
@@ -84,22 +106,22 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             AdoptionContract adoptionContractToCreate = _mapper.Map<AdoptionContract>(contractDTO);
 
-            AdoptionContract adoptionContractToCreateWithRelations = await _unitOfWork.AdoptionContractService.TryAddRelatedEntitiesToAdoptionContract(adoptionContractToCreate, contractDTO.AnimalId, contractDTO.ApplierId);
+            AdoptionContract adoptionContractToCreateWithRelations = await _adoptionContractService.TryAddRelatedEntitiesToAdoptionContract(adoptionContractToCreate, contractDTO.AnimalId, contractDTO.ApplierId);
 
             _permissionChecker.CheckPermissionForAnimal(adoptionContractToCreateWithRelations.Animal, User);
 
             // check for existing AdoptionApplication and set its Status to approved
-            await _unitOfWork.AdoptionApplicationService.SetAdoptionApplicationStatusForContractCreation(adoptionContractToCreateWithRelations.Animal, adoptionContractToCreateWithRelations.Applier);
+            await _adoptionApplicationService.SetAdoptionApplicationStatusForContractCreation(adoptionContractToCreateWithRelations.Animal, adoptionContractToCreateWithRelations.Applier);
 
-            AdoptionContract createdAdoptionContract = await _unitOfWork.AdoptionContractService.AddAsync(adoptionContractToCreateWithRelations);
+            AdoptionContract createdAdoptionContract = await _adoptionContractService.AddAsync(adoptionContractToCreateWithRelations);
 
-            ManagedAdoptionContract managedAdoptionContractToCreate = await _unitOfWork.ManagedAdoptionContractService.TryAddRelatedEntitiesToManagedContract(contractDTO.ManagerId, createdAdoptionContract);
-            ManagedAdoptionContract createdManagedAdoptionContract = await _unitOfWork.ManagedAdoptionContractService.AddAsync(managedAdoptionContractToCreate);
+            ManagedAdoptionContract managedAdoptionContractToCreate = await _managedAdoptionContractService.TryAddRelatedEntitiesToManagedContract(contractDTO.ManagerId, createdAdoptionContract);
+            ManagedAdoptionContract createdManagedAdoptionContract = await _managedAdoptionContractService.AddAsync(managedAdoptionContractToCreate);
 
             //set AnimalStatus to adopted
-            await _unitOfWork.AnimalService.UpdateStatus(createdAdoptionContract.Animal.Id, AnimalStatus.Adopted);
+            await _animalService.UpdateStatus(createdAdoptionContract.Animal.Id, AnimalStatus.Adopted);
             //close AnimalShelter connection with given exitdate (when the Animal is taken home from the Shelter)
-            await _unitOfWork.AnimalShelterService.CheckForAndCloseConnection(createdAdoptionContract.Animal, contractDTO.ExitDate);
+            await _animalShelterService.CheckForAndCloseConnection(createdAdoptionContract.Animal, contractDTO.ExitDate);
 
             AdoptionContractDTOWithManagerDetails createdAdoptionContractDTO = _mapper.Map<AdoptionContractDTOWithManagerDetails>(createdAdoptionContract);
             createdAdoptionContractDTO.Manager = _mapper.Map<UserDTO>(createdManagedAdoptionContract.Manager);
@@ -111,10 +133,10 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpPut("{id}/updateAdoptionContractIsActive")]
         public async Task<ActionResult<AdoptionContractDTO>> UpdateStatus(int id, [FromBody] bool isActive)
         {
-            AdoptionContract adoptionContractWithDetails = await _unitOfWork.AdoptionContractService.GetWithAnimalShelterDetailsAsync(id);
+            AdoptionContract adoptionContractWithDetails = await _adoptionContractService.GetWithAnimalShelterDetailsAsync(id);
             _permissionChecker.CheckPermissionForAdoptionContract(adoptionContractWithDetails, HttpContext.User);
 
-            AdoptionContract updatedAdoptionContract = await _unitOfWork.AdoptionContractService.UpdateAdoptionContractIsActive(id, isActive);
+            AdoptionContract updatedAdoptionContract = await _adoptionContractService.UpdateAdoptionContractIsActive(id, isActive);
 
             AdoptionContractDTO updatedAdoptionContractDTO = _mapper.Map<AdoptionContractDTO>(updatedAdoptionContract);
             return Ok(updatedAdoptionContractDTO);
@@ -123,7 +145,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdoptionContract(int id)
         {
-            await _unitOfWork.AdoptionContractService.DeleteAsync(id);
+            await _adoptionContractService.DeleteAsync(id);
             return NoContent();
         }
     }

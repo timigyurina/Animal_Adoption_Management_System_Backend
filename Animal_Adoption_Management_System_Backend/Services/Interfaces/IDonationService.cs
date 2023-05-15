@@ -1,5 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Repositories;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
@@ -10,5 +11,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task<IEnumerable<Donation>> GetFilteredDonationsAsync(string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status);
         Task<Donation> TryAddDonatorAndShelterToDonation(Donation donationToCreate, string userId, int shelterId);
         Task<Donation> UpdateDonationStatus(int id, DonationStatus newStatus);
+        Task<PagedResult<TResult>> GetPagedAndFilteredDonationsAsync<TResult>(QueryParameters queryParameters, string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status);
     }
 }

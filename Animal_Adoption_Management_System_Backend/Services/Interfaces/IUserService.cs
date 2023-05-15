@@ -23,5 +23,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
         Task<User> UpdateConnectionWithShelterById(Shelter? shelter, string id, bool isContactOfShelter);
 
         Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "");
+        Task<PagedResult<TResult>> GetPagedAndFilteredUsersAsync<TResult>(QueryParameters queryParameters, string? name, string? email, bool? isActive, bool? isContactOfShelter, string? shelterName, DateTime? bornAfter, DateTime? bornBefore);
     }
 }

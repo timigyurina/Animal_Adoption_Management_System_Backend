@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
@@ -17,7 +18,6 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 string connectionString = builder.Configuration.GetConnectionString("AnimalAdoptionConnection") ?? throw new InvalidOperationException("Connection string 'AnimalAdoptionConnection' was not found.");
-
 
 builder.Services.AddControllers();
 
@@ -63,12 +63,11 @@ builder.Services.AddScoped<IAdoptionContractService, AdoptionContractService>();
 builder.Services.AddScoped<IManagedAdoptionContractService, ManagedAdoptionContractService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<DataInitialiser>();
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // "Bearer"
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
@@ -127,6 +126,12 @@ await initializer.SeedAsync();
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "Images")),
+    RequestPath = "/Images"
+});
 
 app.UseCors("AllowOnlyLocalhostOrigin");
 

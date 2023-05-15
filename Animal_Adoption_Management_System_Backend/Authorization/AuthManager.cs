@@ -67,6 +67,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             return new AuthResponseDTO
             {
                 UserId = _user.Id,
+                UserEmail = _user.Email,
                 Roles = await _userManager.GetRolesAsync(_user),
                 Token = token,
                 RefreshToken = await CreateRefreshToken()
@@ -88,10 +89,14 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
             JwtSecurityToken tokenContent = jwtSecurityTokenHandler.ReadJwtToken(token);
 
-            // search for the username with this token
-            string? userName = tokenContent.Claims.ToList()
-                .FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            _user = await _userManager.FindByNameAsync(userName);
+            string? userIdFromToken = tokenContent.Claims.FirstOrDefault(claim => claim.Type == "UserId")?.Value;
+            if (userIdFromToken == null)
+                return null;
+
+            _user = await _userManager.Users
+                .Include(u => u.Shelter)
+                .FirstOrDefaultAsync(u => u.Id == userIdFromToken);
+
             if (_user == null || _user.Id != userId)
                 return null;
 
@@ -103,6 +108,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 return new AuthResponseDTO
                 {
                     UserId = _user.Id,
+                    UserEmail = _user.Email,
                     Token = newTtoken,
                     Roles = await _userManager.GetRolesAsync(_user),
                     RefreshToken = await CreateRefreshToken()

@@ -4,7 +4,7 @@ namespace Animal_Adoption_Management_System_Backend.Models.Pagination
 {
     public class QueryParameters
     {
-        private int _pageSize = 15;
+        private int _pageSize = 10;
         private int _pageNumber = 1;
 
         public int StartIndex { get => PageSize * (PageNumber - 1); }
@@ -17,7 +17,7 @@ namespace Animal_Adoption_Management_System_Backend.Models.Pagination
         }  
 
         [Range(1, int.MaxValue)]
-        public int PageSize // how many items should be on page (default 15)
+        public int PageSize // how many items should be on page (default 10)
         {
             get { return _pageSize; }
             set { _pageSize = value; }

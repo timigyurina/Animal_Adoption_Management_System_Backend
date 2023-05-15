@@ -1,6 +1,7 @@
 ﻿using Animal_Adoption_Management_System_Backend.Authorization;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.ImageDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
+using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
@@ -16,21 +17,25 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
     [ApiController]
     public class ImageController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IImageService _imageService;
+        private readonly IAnimalService _animalService;
+        private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IPermissionChecker _permissionChecker;
 
-        public ImageController(IUnitOfWork unitOfWork, IMapper mapper, IPermissionChecker permissionChecker)
+        public ImageController(IMapper mapper, IPermissionChecker permissionChecker, IImageService imageService, IAnimalService animalService, IUserService userService)
         {
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _permissionChecker = permissionChecker;
+            _imageService = imageService;
+            _animalService = animalService;
+            _userService = userService;
         }
 
         [HttpGet("getAll")]
         public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetAllImages()
         {
-            IEnumerable<Image> images = await _unitOfWork.ImageService.GetAllAsync(null, null, "Animal");
+            IEnumerable<Image> images = await _imageService.GetAllAsync(null, null, "Animal");
             IEnumerable<ImageDTOWithDetails> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithDetails>>(images);
             return Ok(imageDTOs);
         }
@@ -38,14 +43,14 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResult<ImageDTOWithDetails>>> GetPagedImages([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<ImageDTOWithDetails> pagedResult = await _unitOfWork.ImageService.GetAllAsync<ImageDTOWithDetails>(queryParameters, "Animal");
+            PagedResult<ImageDTOWithDetails> pagedResult = await _imageService.GetAllAsync<ImageDTOWithDetails>(queryParameters, "Animal");
             return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<ImageDTOWithDetails>> GetImage(int id)
         {
-            Image imageWithAnimal = await _unitOfWork.ImageService.GetWithAnimalAsync(id);
+            Image imageWithAnimal = await _imageService.GetWithAnimalAsync(id);
 
             ImageDTOWithDetails imageDTO = _mapper.Map<ImageDTOWithDetails>(imageWithAnimal);
             return Ok(imageDTO);
@@ -55,7 +60,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         [HttpGet("{id}/details")]
         public async Task<ActionResult<ImageDTOWithDetails>> GetImageWithDetails(int id)
         {
-            Image imageWithDetails = await _unitOfWork.ImageService.GetWithDetailsAsync(id);
+            Image imageWithDetails = await _imageService.GetWithDetailsAsync(id);
             _permissionChecker.CheckPermissionForImage(imageWithDetails, User);
 
             ImageDTOWithDetails imageDTOWithDetails = _mapper.Map<ImageDTOWithDetails>(imageWithDetails);
@@ -64,10 +69,17 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetFilteredImages(string? uploaderName, string? animalName, string? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetFilteredImages(string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
         {
-            IEnumerable<Image> images = await _unitOfWork.ImageService.GetFilteredImagesAsync(uploaderName, animalName, animalType, takenBefore, takenAfter);
+            IEnumerable<Image> images = await _imageService.GetFilteredImagesAsync(uploaderName, animalName, animalType, takenBefore, takenAfter);
             IEnumerable<ImageDTOWithDetails> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithDetails>>(images);
+            return Ok(imageDTOs);
+        }
+
+        [HttpGet("pageAndFilter")]
+        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetPagedAndFilteredImages([FromQuery] QueryParameters queryParameters, string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        {
+            PagedResult<ImageDTOWithDetails> imageDTOs = await _imageService.GetPagedAndFilteredImagesAsync<ImageDTOWithDetails>(queryParameters, uploaderName, animalName, animalType, takenBefore, takenAfter);
             return Ok(imageDTOs);
         }
 
@@ -79,8 +91,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             Image imageToUpload = await MapAndAddEntities(imageDTO);
             _permissionChecker.CheckPermissionForAnimal(imageToUpload.Animal, User);
 
-            string imagePath = await _unitOfWork.ImageService.SaveImageAsync(imageDTO);
-            Image createdImage = await _unitOfWork.ImageService.AddWithPathAsync(imageToUpload, imagePath);
+            string imagePath = await _imageService.SaveImageAsync(imageDTO);
+            Image createdImage = await _imageService.AddWithPathAsync(imageToUpload, imagePath);
 
             ImageDTO createdImageDTO = _mapper.Map<ImageDTO>(createdImage);
             return Ok(createdImageDTO);
@@ -91,8 +103,8 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             if (string.IsNullOrEmpty(Request.GetMultipartBoundary()))
                 throw new BadRequestException("Invalid post header");
 
-            Animal animal = await _unitOfWork.AnimalService.GetWithAnimalShelterDetailsAsync(imageDTO.AnimalId);
-            User uploader = await _unitOfWork.UserService.GetAsync(imageDTO.UploaderId);
+            Animal animal = await _animalService.GetWithAnimalShelterDetailsAsync(imageDTO.AnimalId);
+            User uploader = await _userService.GetAsync(User.Claims.First(c => c.Type == "UserId").Value);
 
             Image imageToUpload = _mapper.Map<Image>(imageDTO);
             imageToUpload.Animal = animal;

@@ -17,5 +17,9 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
         Task<bool> Exists(int id);
 
         Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "");
+        Task<PagedResult<TResult>> GetPagedAndFiltered<TResult>(
+            QueryParameters queryParameters,
+            IEnumerable<Expression<Func<T, bool>>> filters,
+            string includeProperties = "");
     }
 }

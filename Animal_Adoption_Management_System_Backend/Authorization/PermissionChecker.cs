@@ -13,14 +13,14 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             _logger = logger;
         }
 
-        public void CheckPermissionForShelter(int id, ClaimsPrincipal user)
+        public bool CheckPermissionForShelter(int id, ClaimsPrincipal user)
         {
             _logger.LogWarning($"Evaluating authorization requirement for Shelter with id {id}");
 
             if (user.IsInRole("Administrator"))
             {
                 _logger.LogInformation("Admin request for Shelter");
-                return;
+                return true;
             }
 
             Claim? shelterIdClaim = user.Claims.FirstOrDefault(c => c.Type == "ShelterId");
@@ -30,7 +30,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
                 if (shelterIdClaim.Value == id.ToString())
                 {
                     _logger.LogInformation("Employee's ShelterId claim equals requested Shelter's id");
-                    return;
+                    return true;
                 }
                 else
                 {
@@ -41,7 +41,8 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             {
                 _logger.LogInformation("No ShelterId claim present");
             }
-            throw new ForbiddenException($"Shelter");
+            //throw new ForbiddenException($"Shelter");
+            return false;
         }
 
         public void CheckPermissionForAnimal(Animal animalWithDetails, ClaimsPrincipal user)
@@ -59,6 +60,7 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
             if (shelterIdClaim != null)
             {
                 int idOfLatestShelter = GetLatestShelterIdOfAnimal(animalWithDetails);
+
                 if (shelterIdClaim.Value == idOfLatestShelter.ToString())
                 {
                     _logger.LogInformation("Employee's ShelterId claim equals requested Animal's ShelterId");
@@ -222,6 +224,8 @@ namespace Animal_Adoption_Management_System_Backend.Authorization
         private int GetLatestShelterIdOfAnimal(Animal animalWithDetails)
         {
             int shelterId;
+            if(!animalWithDetails.AnimalShelters.Any())
+                throw new BadRequestException($"Animal with id {animalWithDetails.Id} has not been added to any Shelter");
             AnimalShelter? currentAnimalShelterConnection = animalWithDetails.AnimalShelters.FirstOrDefault(animalS => animalS.ExitDate == null);
             if (currentAnimalShelterConnection == null)
                 shelterId = animalWithDetails.AnimalShelters
