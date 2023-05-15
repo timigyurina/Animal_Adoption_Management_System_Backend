@@ -50,6 +50,18 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .Include(s => s.Address)
                 .FirstAsync(s => s.Id == id);
         }
+        
+        public async Task<Shelter> GetWithAddressAndAnimalsAsync(int id)
+        {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(Shelter).Name, id);
+
+            return await _context.Shelters
+                .Include(s => s.Address)
+                .Include(s => s.Animals)
+                    .ThenInclude(a => a.Animal)
+                .FirstAsync(s => s.Id == id);
+        }
 
         public async Task<Shelter> GetWithDetailsAsync(int id)
         {
