@@ -1,8 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
@@ -16,8 +14,15 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         {
             _enumService = enumService;
         }
+        
 
-
+        [HttpGet]
+        public ActionResult<Dictionary<string, Dictionary<string, int>>> GetAllEnums()
+        {
+            Dictionary<string, Dictionary<string, int>> allEnums = _enumService.GetAllEnumsDictionary();
+            return Ok(allEnums);
+        }
+        
         [HttpGet("{enumName}")]
         public ActionResult<EnumDetails> GetEnum(string enumName)
         {
