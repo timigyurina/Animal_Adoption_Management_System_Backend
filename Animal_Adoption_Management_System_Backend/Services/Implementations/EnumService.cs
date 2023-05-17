@@ -7,10 +7,17 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
     public class EnumService : IEnumService
     {
         private readonly IEnumerable<EnumDetails> _enums;
+        private readonly Dictionary<string, Dictionary<string, int>> _enumDictionary;
 
         public EnumService()
         {
             _enums = GenerateEnumDetailslList();
+            _enumDictionary = GenerateEnumDictionary();
+        }
+
+        public Dictionary<string, Dictionary<string, int>> GetAllEnumsDictionary()
+        {
+            return _enumDictionary;
         }
 
         public EnumDetails GetValuesOfEnum(string enumName)
@@ -19,6 +26,22 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             if (enumDetails == null)
                 throw new BadRequestException($"Enum with type {enumName} does not exist");
             return enumDetails;
+        }
+
+
+        private static Dictionary<string, Dictionary<string, int>> GenerateEnumDictionary()
+        {
+            Dictionary<string, Dictionary<string, int>> enumDictionary = new()
+            {
+                { "animalColor", GetDictionaryOfEnum<AnimalColor>() },
+                { "animalSize", GetDictionaryOfEnum<AnimalSize>() },
+                { "animalStatus", GetDictionaryOfEnum<AnimalStatus>() },
+                { "animalType", GetDictionaryOfEnum<AnimalType>() },
+                { "applicationStatus", GetDictionaryOfEnum<ApplicationStatus>() },
+                { "donationStatus", GetDictionaryOfEnum<DonationStatus>() },
+                { "gender", GetDictionaryOfEnum<Gender>() },
+            };
+            return enumDictionary;
         }
 
         private static IEnumerable<EnumDetails> GenerateEnumDetailslList()
