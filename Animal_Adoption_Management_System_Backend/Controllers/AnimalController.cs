@@ -70,18 +70,18 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
         [Authorize]
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetFilteredAnimals(string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
+        public async Task<ActionResult<IEnumerable<AnimalDTOWithBreed>>> GetFilteredAnimals(string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
         {
             IEnumerable<Animal> animals = await _animalService.GetFilteredAnimalsAsync(name, type, size, status, gender, color, breedId, isSterilised, bornAfter, bornBefore);
-            IEnumerable<AnimalDTO> animalDTOs = _mapper.Map<IEnumerable<AnimalDTO>>(animals);
+            IEnumerable<AnimalDTOWithBreed> animalDTOs = _mapper.Map<IEnumerable<AnimalDTOWithBreed>>(animals);
             return Ok(animalDTOs);
         }
 
         [Authorize]
         [HttpGet("pageAndFilter")]
-        public async Task<ActionResult<IEnumerable<AnimalDTO>>> GetPagedAndFilteredAnimals([FromQuery] QueryParameters queryParameters, string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
+        public async Task<ActionResult<IEnumerable<AnimalDTOWithBreed>>> GetPagedAndFilteredAnimals([FromQuery] QueryParameters queryParameters, string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore)
         {
-            PagedResult<AnimalDTO> animalDTOs = await _animalService.GetPagedAndFilteredAnimalsAsync<AnimalDTO>(queryParameters, name, type, size, status, gender, color, breedId, isSterilised, bornAfter, bornBefore);
+            PagedResult<AnimalDTOWithBreed> animalDTOs = await _animalService.GetPagedAndFilteredAnimalsAsync<AnimalDTOWithBreed>(queryParameters, name, type, size, status, gender, color, breedId, isSterilised, bornAfter, bornBefore);
             return Ok(animalDTOs);
         }
 

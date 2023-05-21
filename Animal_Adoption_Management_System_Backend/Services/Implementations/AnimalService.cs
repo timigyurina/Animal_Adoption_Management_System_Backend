@@ -30,7 +30,9 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             DateTime? bornAfter,
             DateTime? bornBefore)
         {
-            IQueryable<Animal> animalQuery = _context.Animals.AsNoTracking();
+            IQueryable<Animal> animalQuery = _context.Animals
+                .Include(a=>a.Breed)
+                .AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
             {
@@ -206,7 +208,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 filters.Add(bornBeforePredicate);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Breed");
         }
 
 
