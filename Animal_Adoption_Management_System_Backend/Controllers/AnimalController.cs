@@ -1,16 +1,20 @@
 ﻿using Animal_Adoption_Management_System_Backend.Authorization;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTOs;
+using Animal_Adoption_Management_System_Backend.Models.DTOs.ShelterDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
+using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AnimalController : ControllerBase
@@ -49,11 +53,19 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<AnimalDTO>> GetAnimal(int id)
+        public async Task<ActionResult<AnimalDTOWithInfoForAdopters>> GetAnimal(int id)
         {
-            Animal animal = await _animalService.GetAsync(id);
+            Animal animal = await _animalService.GetWithInfoForAdoptersAsync(id);
+            AnimalShelter latestShelterConnection = _animalService.GetLatestShelterConnectionOfAnimal(animal);
+            Shelter latestShelter = await _shelterService.GetWithAddressAsync(latestShelterConnection.Shelter.Id);
 
-            AnimalDTO animalDTO = _mapper.Map<AnimalDTO>(animal);
+            ShelterDTOWithDetails latestShelterDTO = _mapper.Map<ShelterDTOWithDetails>(latestShelter);
+            AnimalDTOWithInfoForAdopters animalDTO = _mapper.Map<AnimalDTOWithInfoForAdopters>(animal);
+
+            animalDTO.LatestShelter = latestShelterDTO;
+            animalDTO.EnrollmentDate = latestShelterConnection.EnrollmentDate;
+            animalDTO.ExitDate = latestShelterConnection.ExitDate;
+
             return Ok(animalDTO);
         }
 
@@ -107,15 +119,23 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return CreatedAtAction("GetAnimal", new { id = createdAnimal.Id }, createdAnimalDTO);
         }
 
-        [Authorize(Roles = "Administrator, ShelterEmployee")] // frontend automatically adds logged in User's ShelterId when adding new Animal
+        [Authorize(Roles = "Administrator, ShelterEmployee")] 
         [HttpPost("{id}/addShelterConnection")]  // when adding a new Animal to the system or when Animal is taken back to (new) Shelter again
         public async Task<ActionResult<AnimalShelterDTO>> CreateAnimalShelterConnection(int id, CreateAnimalShelterDTO animaShelterlDTO)
         {
-            Animal animal = await _animalService.GetAsync(id);
-            Shelter shelter = await _shelterService.GetAsync(animaShelterlDTO.ShelterId);
+            // ShelterId is automatically added if User is ShelterEmployee, otherwise Admin can select it on the frontend
+            Claim? shelterIdClaim = User.Claims.FirstOrDefault(c => c.Type == "ShelterId");
+
+            //On frontend, animaShelterlDTO.ShelterId is -1, if Animal is created by employee, so it needs to be adjusted to Employee's Shelter. 
+            int shelterId = shelterIdClaim != null ? int.Parse(shelterIdClaim.Value) : animaShelterlDTO.ShelterId; 
+            if (shelterId == -1) throw new BadRequestException("No Shelter was provided");
+
+            Shelter shelter = await _shelterService.GetWithAddressAsync(shelterId);
+
             // set Animal to be adoptable (if it was taken back to Shelter after being adopted)
             await _animalService.UpdateStatus(id, AnimalStatus.WaitingForAdoption);
 
+            Animal animal = await _animalService.GetAsync(id);
             AnimalShelter createdConnection = await _animalShelterService.CreateAnimalShelterConnection(animal, shelter, animaShelterlDTO.EnrollmentDate);
             AnimalShelterDTO createdConnectionDTO = _mapper.Map<AnimalShelterDTO>(createdConnection);
 
@@ -150,7 +170,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
         [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpPut("{id}")]
-        public async Task<ActionResult<AnimalDTO>> UpdateAnimal(int id, UpdateAnimalDTO animalDTO)
+        public async Task<ActionResult<AnimalDTOWithBreed>> UpdateAnimal(int id, UpdateAnimalDTO animalDTO)
         {
             Animal animalToUpdate = await _animalService.GetAsync(id);
             Animal animalWithDetails = await _animalService.GetWithDetailsAsync(id);
@@ -163,7 +183,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
             await _animalService.UpdateAsync(animalToUpdate);
 
-            AnimalDTO updatedAnimalDTO = _mapper.Map<AnimalDTO>(animalToUpdate);
+            AnimalDTOWithBreed updatedAnimalDTO = _mapper.Map<AnimalDTOWithBreed>(animalToUpdate);
             return Ok(updatedAnimalDTO);
         }
 
