@@ -77,6 +77,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             adoptionContractToCreate.Animal = animal;
             adoptionContractToCreate.Applier = applier;
+            adoptionContractToCreate.IsActive = true;
 
             return adoptionContractToCreate;
         }
