@@ -14,6 +14,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,7 +58,8 @@ builder.Services.AddScoped<IAnimalService, AnimalService>();
 builder.Services.AddScoped<IShelterService, ShelterService>();
 builder.Services.AddScoped<IAnimalShelterService, AnimalShelterService>();
 builder.Services.AddScoped<IDonationService, DonationService>();
-builder.Services.AddScoped<IImageService, ImageService>();
+//builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IImageService>(x => new ImageService(x.GetRequiredService<AnimalAdoptionContext>(),x.GetRequiredService<IMapper>(), x.GetRequiredService<IHostEnvironment>()));
 builder.Services.AddScoped<IAdoptionApplicationService, AdoptionApplicationService>();
 builder.Services.AddScoped<IAdoptionContractService, AdoptionContractService>();
 builder.Services.AddScoped<IManagedAdoptionContractService, ManagedAdoptionContractService>();

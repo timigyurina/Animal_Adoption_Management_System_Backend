@@ -30,7 +30,9 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             DateTime? bornAfter,
             DateTime? bornBefore)
         {
-            IQueryable<Animal> animalQuery = _context.Animals.AsNoTracking();
+            IQueryable<Animal> animalQuery = _context.Animals
+                .Include(a=>a.Breed)
+                .AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
             {
@@ -86,7 +88,8 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return await _context.Animals
                 .Include(a => a.Breed)
                 .Include(a => a.AnimalShelters)
-                    .ThenInclude(s => s.Shelter)
+                    .ThenInclude(animalShelter => animalShelter.Shelter)
+                        .ThenInclude(s => s.Address)
                 .Include(a => a.AdoptionApplications)
                 .Include(a => a.AdoptionContracts)
                 .Include(a => a.Images)
@@ -94,6 +97,20 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 .FirstAsync(a => a.Id == id);
         }
 
+        public async Task<Animal> GetWithInfoForAdoptersAsync(int id)
+        {
+            if (!await Exists(id))
+                throw new NotFoundException(typeof(Animal).Name, id);
+
+            return await _context.Animals
+                .Include(a => a.Breed)
+                .Include(a => a.Images)
+                .Include(a => a.AnimalShelters)
+                    .ThenInclude(s => s.Shelter)
+                .AsNoTracking()
+                .FirstAsync(a => a.Id == id);
+        }
+        
         public async Task<Animal> GetWithImagesAsync(int id)
         {
             if (!await Exists(id))
@@ -206,9 +223,23 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 filters.Add(bornBeforePredicate);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Breed");
         }
 
+        public AnimalShelter GetLatestShelterConnectionOfAnimal(Animal animalWithDetails)
+        {
+            AnimalShelter latestShelterConnection;
+            if (!animalWithDetails.AnimalShelters.Any())
+                throw new BadRequestException($"Animal with id {animalWithDetails.Id} has not been added to any Shelter");
+            AnimalShelter? currentAnimalShelterConnection = animalWithDetails.AnimalShelters.FirstOrDefault(animalS => animalS.ExitDate == null);
+            if (currentAnimalShelterConnection == null)
+                latestShelterConnection = animalWithDetails.AnimalShelters
+                    .Aggregate((latest, curr) => latest.ExitDate > curr.ExitDate ? latest : curr);
+            else
+                latestShelterConnection = currentAnimalShelterConnection;
+
+            return latestShelterConnection;
+        }
 
         private void CheckAnimalAndAnimalTypeBreedMatch(Animal entity)
         {

@@ -33,26 +33,26 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         }
 
         [HttpGet("getAll")]
-        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetAllImages()
+        public async Task<ActionResult<IEnumerable<ImageDTOWithAnimal>>> GetAllImages()
         {
             IEnumerable<Image> images = await _imageService.GetAllAsync(null, null, "Animal");
-            IEnumerable<ImageDTOWithDetails> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithDetails>>(images);
+            IEnumerable<ImageDTOWithAnimal> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithAnimal>>(images);
             return Ok(imageDTOs);
         }
 
         [HttpGet]
-        public async Task<ActionResult<PagedResult<ImageDTOWithDetails>>> GetPagedImages([FromQuery] QueryParameters queryParameters)
+        public async Task<ActionResult<PagedResult<ImageDTOWithAnimal>>> GetPagedImages([FromQuery] QueryParameters queryParameters)
         {
-            PagedResult<ImageDTOWithDetails> pagedResult = await _imageService.GetAllAsync<ImageDTOWithDetails>(queryParameters, "Animal");
+            PagedResult<ImageDTOWithAnimal> pagedResult = await _imageService.GetAllAsync<ImageDTOWithAnimal>(queryParameters, "Animal");
             return Ok(pagedResult);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ImageDTOWithDetails>> GetImage(int id)
+        public async Task<ActionResult<ImageDTOWithAnimal>> GetImage(int id)
         {
             Image imageWithAnimal = await _imageService.GetWithAnimalAsync(id);
 
-            ImageDTOWithDetails imageDTO = _mapper.Map<ImageDTOWithDetails>(imageWithAnimal);
+            ImageDTOWithAnimal imageDTO = _mapper.Map<ImageDTOWithAnimal>(imageWithAnimal);
             return Ok(imageDTO);
         }
 
@@ -67,19 +67,18 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             return Ok(imageDTOWithDetails);
         }
 
-        [Authorize(Roles = "Administrator, ShelterEmployee")]
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetFilteredImages(string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        public async Task<ActionResult<IEnumerable<ImageDTOWithAnimal>>> GetFilteredImages(string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
         {
             IEnumerable<Image> images = await _imageService.GetFilteredImagesAsync(uploaderName, animalName, animalType, takenBefore, takenAfter);
-            IEnumerable<ImageDTOWithDetails> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithDetails>>(images);
+            IEnumerable<ImageDTOWithAnimal> imageDTOs = _mapper.Map<IEnumerable<ImageDTOWithAnimal>>(images);
             return Ok(imageDTOs);
         }
 
         [HttpGet("pageAndFilter")]
-        public async Task<ActionResult<IEnumerable<ImageDTOWithDetails>>> GetPagedAndFilteredImages([FromQuery] QueryParameters queryParameters, string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
+        public async Task<ActionResult<IEnumerable<ImageDTOWithAnimal>>> GetPagedAndFilteredImages([FromQuery] QueryParameters queryParameters, string? uploaderName, string? animalName, AnimalType? animalType, DateTime? takenBefore, DateTime? takenAfter)
         {
-            PagedResult<ImageDTOWithDetails> imageDTOs = await _imageService.GetPagedAndFilteredImagesAsync<ImageDTOWithDetails>(queryParameters, uploaderName, animalName, animalType, takenBefore, takenAfter);
+            PagedResult<ImageDTOWithAnimal> imageDTOs = await _imageService.GetPagedAndFilteredImagesAsync<ImageDTOWithAnimal>(queryParameters, uploaderName, animalName, animalType, takenBefore, takenAfter);
             return Ok(imageDTOs);
         }
 
@@ -94,7 +93,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
             string imagePath = await _imageService.SaveImageAsync(imageDTO);
             Image createdImage = await _imageService.AddWithPathAsync(imageToUpload, imagePath);
 
-            ImageDTO createdImageDTO = _mapper.Map<ImageDTO>(createdImage);
+            ImageDTOWithAnimal createdImageDTO = _mapper.Map<ImageDTOWithAnimal>(createdImage);
             return Ok(createdImageDTO);
         }
 

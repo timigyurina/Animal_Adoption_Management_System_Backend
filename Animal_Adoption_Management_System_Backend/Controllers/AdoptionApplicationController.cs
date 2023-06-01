@@ -85,7 +85,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
         public async Task<ActionResult<AdoptionApplicationDTO>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)
         {
             AdoptionApplication adoptionApplicationToCreate = _mapper.Map<AdoptionApplication>(applicationDTO);
-            AdoptionApplication adoptionApplicationToCreateWithAnimalAndApplier = await _adoptionApplicationService.TryAddAnimalAndApplierToAdoptionApplication(adoptionApplicationToCreate, applicationDTO.AnimalId, applicationDTO.ApplierId);
+            AdoptionApplication adoptionApplicationToCreateWithAnimalAndApplier = await _adoptionApplicationService.TryAddAnimalAndApplierToAdoptionApplication(adoptionApplicationToCreate, applicationDTO.AnimalId, User);
 
             AdoptionApplication createdAdoptionApplication = await _adoptionApplicationService.AddAsync(adoptionApplicationToCreateWithAnimalAndApplier);
 

@@ -115,7 +115,7 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
             AdoptionContract createdAdoptionContract = await _adoptionContractService.AddAsync(adoptionContractToCreateWithRelations);
 
-            ManagedAdoptionContract managedAdoptionContractToCreate = await _managedAdoptionContractService.TryAddRelatedEntitiesToManagedContract(contractDTO.ManagerId, createdAdoptionContract);
+            ManagedAdoptionContract managedAdoptionContractToCreate = await _managedAdoptionContractService.TryAddRelatedEntitiesToManagedContract(User, createdAdoptionContract);
             ManagedAdoptionContract createdManagedAdoptionContract = await _managedAdoptionContractService.AddAsync(managedAdoptionContractToCreate);
 
             //set AnimalStatus to adopted

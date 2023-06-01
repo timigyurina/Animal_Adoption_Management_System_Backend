@@ -14,8 +14,11 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
     public class ImageService : GenericRepository<Image>, IImageService
     {
-        public ImageService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
+        private readonly IHostEnvironment _env;
+
+        public ImageService(AnimalAdoptionContext context, IMapper mapper, IHostEnvironment env) : base(context, mapper)
         {
+            _env = env;
         }
 
         public async Task<string> SaveImageAsync(CreateImageDTO imageDTO)
@@ -121,13 +124,16 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 filters.Add(takenAfterPredicate);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Animal,Uploader");
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Animal");
         }
 
         private string CreateImageFilePath(CreateImageDTO imageDTO)
         {
             string uniqueFileName = GetUniqueFileName(imageDTO.Image.FileName);
+            
             string filePath = Path.Combine("Images", "Animals", imageDTO.AnimalId.ToString(), uniqueFileName);
+
+            //string pathFromContentRootFolder = Path.Combine(GetPathOfContentRootFolder(), "Animal_Adoption_Management_System_Images\\Animals", imageDTO.AnimalId.ToString(), uniqueFileName);
             return filePath;
         }
 
@@ -138,6 +144,15 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                                 , "_"
                                 , Guid.NewGuid().ToString().AsSpan(0, 4)
                                 , Path.GetExtension(fileName));
+        }
+
+        private string GetPathOfContentRootFolder()
+        {
+            string contentRootPath = _env.ContentRootPath;
+            return contentRootPath
+                .Substring(0, contentRootPath
+                    .Substring(0, contentRootPath
+                        .Substring(0, contentRootPath.LastIndexOf("\\")).LastIndexOf("\\")).LastIndexOf("\\"));
         }
     }
 }

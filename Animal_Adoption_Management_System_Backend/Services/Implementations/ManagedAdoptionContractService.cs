@@ -5,6 +5,7 @@ using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -27,15 +28,16 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return managedAdoptionContract;
         }
 
-        public async Task<ManagedAdoptionContract> TryAddRelatedEntitiesToManagedContract(string managerId, AdoptionContract adoptionContract)
+        public async Task<ManagedAdoptionContract> TryAddRelatedEntitiesToManagedContract(ClaimsPrincipal manager, AdoptionContract adoptionContract)
         {
-            User manager = await _context.Users
-                .FirstOrDefaultAsync(a => a.Id == managerId) ?? throw new NotFoundException($"{typeof(User).Name} (manager)", managerId);
+            Claim? UserIdClaim = manager.Claims.FirstOrDefault(c => c.Type == "UserId") ?? throw new BadRequestException("Cannot add Manager to AdoptionApplication, no User was found");
+            User foundManager = await _context.Users
+                .FirstOrDefaultAsync(a => a.Id == UserIdClaim.Value) ?? throw new NotFoundException(typeof(User).Name, UserIdClaim.Value);
 
             ManagedAdoptionContract managedAdoptionContract = new()
             {
                 Contract = adoptionContract,
-                Manager = manager
+                Manager = foundManager
             };
 
             return managedAdoptionContract;

@@ -25,11 +25,14 @@ namespace Animal_Adoption_Management_System_Backend.Configurations
             CreateMap<Animal, CreateAnimalDTO>().ReverseMap();
             CreateMap<Animal, AnimalDTO>().ReverseMap();
             CreateMap<Animal, AnimalDTOWithDetails>().ReverseMap();
+            CreateMap<Animal, AnimalDTOWithBreed>().ReverseMap();
+            CreateMap<Animal, AnimalDTOWithInfoForAdopters>().ReverseMap();
             CreateMap<Animal, UpdateAnimalDTO>().ReverseMap();
             
             CreateMap<Shelter, CreateShelterDTO>().ReverseMap();
             CreateMap<Shelter, ShelterDTO>().ReverseMap();
             CreateMap<Shelter, ShelterDTOWithDetails>().ReverseMap();
+            CreateMap<Shelter, ShelterDTOWithAddress>().ReverseMap();
             CreateMap<Shelter, UpdateShelterContactInfoDTO>().ReverseMap();
 
             CreateMap<AnimalShelter, AnimalShelterDTO>().ReverseMap();
@@ -59,6 +62,7 @@ namespace Animal_Adoption_Management_System_Backend.Configurations
 
             CreateMap<Image, ImageDTO>().ReverseMap();
             CreateMap<Image, ImageDTOWithDetails>().ReverseMap();
+            CreateMap<Image, ImageDTOWithAnimal>().ReverseMap();
             CreateMap<Image, CreateImageDTO>().ReverseMap();
         }
     }

@@ -8,6 +8,7 @@ using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
@@ -66,17 +67,22 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return await adoptionApplicationQuery.ToListAsync();
         }
 
-        public async Task<AdoptionApplication> TryAddAnimalAndApplierToAdoptionApplication(AdoptionApplication adoptionApplicationToCreate, int animalId, string applierId)
+        public async Task<AdoptionApplication> TryAddAnimalAndApplierToAdoptionApplication(AdoptionApplication adoptionApplicationToCreate, int animalId, ClaimsPrincipal applier)
         {
             Animal animal = await _context.Animals
                 .FirstOrDefaultAsync(a => a.Id == animalId) ?? throw new NotFoundException(typeof(Animal).Name, animalId);
-            User applier = await _context.Users
-                .FirstOrDefaultAsync(a => a.Id == applierId) ?? throw new NotFoundException(typeof(User).Name, applierId);
+
+            Claim? UserIdClaim = applier.Claims.FirstOrDefault(c => c.Type == "UserId") ?? throw new BadRequestException("Cannot add Applier to AdoptionApplication, no User was found");
+            User foundApplier = await _context.Users
+                .FirstOrDefaultAsync(a => a.Id == UserIdClaim.Value) ?? throw new NotFoundException(typeof(User).Name, UserIdClaim.Value);
+
             if (animal.Status != AnimalStatus.WaitingForAdoption)
                 throw new BadRequestException($"Animal with id {animalId} is not adoptable");
 
             adoptionApplicationToCreate.Animal = animal;
-            adoptionApplicationToCreate.Applier = applier;
+            adoptionApplicationToCreate.Applier = foundApplier;
+            adoptionApplicationToCreate.ApplicationDate = DateTime.Today;
+            adoptionApplicationToCreate.Status = ApplicationStatus.Submitted;
 
             return adoptionApplicationToCreate;
         }
