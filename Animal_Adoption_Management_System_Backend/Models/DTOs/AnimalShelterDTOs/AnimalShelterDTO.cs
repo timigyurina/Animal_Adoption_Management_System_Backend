@@ -8,7 +8,7 @@ namespace Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalShelterDTO
         public int Id { get; set; }
         public DateTime EnrollmentDate { get; set; }
         public DateTime? ExitDate { get; set; }
-        public AnimalDTO Animal { get; set; }
+        public AnimalDTOWithBreed Animal { get; set; }
         public ShelterDTOWithAddress Shelter { get; set; }
     }
 }
