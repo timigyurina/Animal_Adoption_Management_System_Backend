@@ -27,7 +27,7 @@ Apart from browsing among adoptable animals, one of the main functionalities for
 
 ## Images
 ##### 1. UML diagram of the model classes
-<img src="./Images/Animal_Adoption_Management_System_class_diagram.jpeg">  
+<img src="./Animal_Adoption_Management_System_class_diagram.jpeg">
 <br>
 
 ### Disclaimer
