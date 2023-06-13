@@ -1,11 +1,10 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
 {
-    public interface IDonationService : IGenericRepository<Donation>
+    public interface IDonationService : IGenericService<Donation>
     {
         Task<Donation> GetWithDetailsAsync(int id);
         Task<IEnumerable<Donation>> GetFilteredDonationsAsync(string? shelterName, string? donatorName, decimal? minAmount, decimal? maxAmount, DateTime? dateAfter, DateTime? dateBefore, DonationStatus? status);

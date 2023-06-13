@@ -2,11 +2,10 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
 {
-    public interface IAnimalService : IGenericRepository<Animal>
+    public interface IAnimalService : IGenericService<Animal>
     {
         Task<IEnumerable<Animal>> GetFilteredAnimalsAsync(string? name, AnimalType? type, AnimalSize? size, AnimalStatus? status, Gender? gender, AnimalColor? color, int? breedId, bool? isSterilised, DateTime? bornAfter, DateTime? bornBefore);
         Task<Animal> GetWithInfoForAdoptersAsync(int id);
