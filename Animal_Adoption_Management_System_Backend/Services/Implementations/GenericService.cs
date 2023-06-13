@@ -6,16 +6,17 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Linq.Expressions;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 
-namespace Animal_Adoption_Management_System_Backend.Repositories
+namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    public class GenericService<T> : IGenericService<T> where T : class
     {
         internal readonly AnimalAdoptionContext _context;
         internal readonly DbSet<T> _dbSet;
         private readonly IMapper _mapper;
 
-        public GenericRepository(AnimalAdoptionContext context, IMapper mapper)
+        public GenericService(AnimalAdoptionContext context, IMapper mapper)
         {
             _context = context;
             _dbSet = _context.Set<T>();
@@ -67,9 +68,6 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
         {
             T entityToDelete = await GetAsync(id);
 
-            if (_context.Entry(entityToDelete).State == EntityState.Detached)
-                _dbSet.Attach(entityToDelete);
-
             _dbSet.Remove(entityToDelete);
             await _context.SaveChangesAsync();
         }
@@ -80,15 +78,11 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
             return entity != null;
         }
 
-        public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "")
+        public async Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters)
         {
             int totalSize = await _context.Set<T>().CountAsync();
 
             IQueryable<T> query = _dbSet;
-
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-                query = query.Include(includeProperty);
-
             List<TResult> items = await query
                 .Skip(queryParameters.StartIndex)
                 .Take(queryParameters.PageSize)
@@ -103,16 +97,12 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
                 TotalCount = totalSize
             };
         }
-        
+
         public async Task<PagedResult<TResult>> GetPagedAndFiltered<TResult>(
-            QueryParameters queryParameters, 
-            IEnumerable<Expression<Func<T, bool>>> filters,
-            string includeProperties = "")
+            QueryParameters queryParameters,
+            IEnumerable<Expression<Func<T, bool>>> filters)
         {
             IQueryable<T> query = _dbSet.AsNoTracking();
-
-            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
-                query = query.Include(includeProperty);
 
             if (filters.Any())
             {
@@ -123,7 +113,7 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
             List<TResult> items = await query
                 .Skip(queryParameters.StartIndex)
                 .Take(queryParameters.PageSize)
-                .ProjectTo<TResult>(_mapper.ConfigurationProvider) 
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             return new PagedResult<TResult>

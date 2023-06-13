@@ -1,9 +1,9 @@
 ﻿using Animal_Adoption_Management_System_Backend.Models.Pagination;
 using System.Linq.Expressions;
 
-namespace Animal_Adoption_Management_System_Backend.Repositories
+namespace Animal_Adoption_Management_System_Backend.Services.Interfaces
 {
-    public interface IGenericRepository<T> where T : class
+    public interface IGenericService<T> where T : class
     {
         Task<T> GetAsync(int id);
         Task<IEnumerable<T>> GetAllAsync(
@@ -16,10 +16,9 @@ namespace Animal_Adoption_Management_System_Backend.Repositories
         Task DeleteAsync(int id);
         Task<bool> Exists(int id);
 
-        Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters, string includeProperties = "");
+        Task<PagedResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters);
         Task<PagedResult<TResult>> GetPagedAndFiltered<TResult>(
             QueryParameters queryParameters,
-            IEnumerable<Expression<Func<T, bool>>> filters,
-            string includeProperties = "");
+            IEnumerable<Expression<Func<T, bool>>> filters);
     }
 }
