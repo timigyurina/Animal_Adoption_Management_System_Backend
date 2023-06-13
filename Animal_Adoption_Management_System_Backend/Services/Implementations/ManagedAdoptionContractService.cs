@@ -1,7 +1,6 @@
 ﻿using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
@@ -9,7 +8,7 @@ using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class ManagedAdoptionContractService : GenericRepository<ManagedAdoptionContract>, IManagedAdoptionContractService
+    public class ManagedAdoptionContractService : GenericService<ManagedAdoptionContract>, IManagedAdoptionContractService
     {
         public ManagedAdoptionContractService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {

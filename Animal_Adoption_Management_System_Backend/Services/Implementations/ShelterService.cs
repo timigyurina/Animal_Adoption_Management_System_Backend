@@ -2,7 +2,6 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class ShelterService : GenericRepository<Shelter>, IShelterService
+    public class ShelterService : GenericService<Shelter>, IShelterService
     {
         public ShelterService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
@@ -120,23 +119,23 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             List<Expression<Func<Shelter, bool>>> filters = new();
             if (!string.IsNullOrWhiteSpace(name))
             {
-                Expression<Func<Shelter, bool>> namePredicate = s => s.Name.ToLower().Contains(name.ToLower());
-                filters.Add(namePredicate);
+                Expression<Func<Shelter, bool>> nameExpression = s => s.Name.ToLower().Contains(name.ToLower());
+                filters.Add(nameExpression);
             }
             if (!string.IsNullOrWhiteSpace(contactPersonName))
             {
-                Expression<Func<Shelter, bool>> contactPersonNamePredicate = s => s.Employees
+                Expression<Func<Shelter, bool>> contactPersonNameExpression = s => s.Employees
                         .Any(e => e.IsContactOfShelter && (e.FirstName.ToLower().Contains(contactPersonName.ToLower()) ||
                                                        e.LastName.ToLower().Contains(contactPersonName.ToLower())));
-                filters.Add(contactPersonNamePredicate);
+                filters.Add(contactPersonNameExpression);
             }
             if (isActive != null)
             {
-                Expression<Func<Shelter, bool>> isActivePredicate = s => s.IsActive == isActive;
-                filters.Add(isActivePredicate);
+                Expression<Func<Shelter, bool>> isActiveExpression = s => s.IsActive == isActive;
+                filters.Add(isActiveExpression);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Employees");
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
 
         }
     }

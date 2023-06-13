@@ -2,7 +2,6 @@
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class AnimalBreedService : GenericRepository<AnimalBreed>, IAnimalBreedService
+    public class AnimalBreedService : GenericService<AnimalBreed>, IAnimalBreedService
     {
         public AnimalBreedService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
@@ -38,13 +37,13 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             List<Expression<Func<AnimalBreed, bool>>> filters = new();
             if (!string.IsNullOrWhiteSpace(name))
             {
-                Expression<Func<AnimalBreed, bool>> namePredicate = b => b.Name.ToLower().Contains(name.ToLower());
-                filters.Add(namePredicate);
+                Expression<Func<AnimalBreed, bool>> nameExpression = b => b.Name.ToLower().Contains(name.ToLower());
+                filters.Add(nameExpression);
             }
             if (type != null)
             {
-                Expression<Func<AnimalBreed, bool>> typePredicate = b => b.Type == type;
-                filters.Add(typePredicate);
+                Expression<Func<AnimalBreed, bool>> typeExpression = b => b.Type == type;
+                filters.Add(typeExpression);
             }
 
             return await GetPagedAndFiltered<TResult>(queryParameters, filters);

@@ -3,7 +3,6 @@ using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class AdoptionContractService : GenericRepository<AdoptionContract>, IAdoptionContractService
+    public class AdoptionContractService : GenericService<AdoptionContract>, IAdoptionContractService
     {
         public AdoptionContractService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
@@ -110,28 +109,28 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             List<Expression<Func<AdoptionContract, bool>>> filters = new();
             if (!string.IsNullOrWhiteSpace(animalName))
             {
-                Expression<Func<AdoptionContract, bool>> animalNamePredicate = a => a.Animal.Name.ToLower().Contains(animalName.ToLower());
-                filters.Add(animalNamePredicate);
+                Expression<Func<AdoptionContract, bool>> animalNameExpression = a => a.Animal.Name.ToLower().Contains(animalName.ToLower());
+                filters.Add(animalNameExpression);
             }
             if (!string.IsNullOrWhiteSpace(applierName))
             {
-                Expression<Func<AdoptionContract, bool>> applierNamePredicate = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) || a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
-                filters.Add(applierNamePredicate);
+                Expression<Func<AdoptionContract, bool>> applierNameExpression = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) || a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
+                filters.Add(applierNameExpression);
             }
             if (dateAfter != null)
             {
-                Expression<Func<AdoptionContract, bool>> dateAfterPredicate = a => a.ContractDate >= dateAfter;
-                filters.Add(dateAfterPredicate);
+                Expression<Func<AdoptionContract, bool>> dateAfterExpression = a => a.ContractDate >= dateAfter;
+                filters.Add(dateAfterExpression);
             }
             if (dateBefore != null)
             {
-                Expression<Func<AdoptionContract, bool>> dateBeforePredicate = a => a.ContractDate < dateBefore;
-                filters.Add(dateBeforePredicate);
+                Expression<Func<AdoptionContract, bool>> dateBeforeExpression = a => a.ContractDate < dateBefore;
+                filters.Add(dateBeforeExpression);
             }
             if (isActive != null)
             {
-                Expression<Func<AdoptionContract, bool>> isActivePredicate = a => a.IsActive == isActive;
-                filters.Add(isActivePredicate);
+                Expression<Func<AdoptionContract, bool>> isActiveExpression = a => a.IsActive == isActive;
+                filters.Add(isActiveExpression);
             }
 
             return await GetPagedAndFiltered<TResult>(queryParameters, filters);

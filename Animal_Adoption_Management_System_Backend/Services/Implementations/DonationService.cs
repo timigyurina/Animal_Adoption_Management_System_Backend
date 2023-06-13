@@ -3,7 +3,6 @@ using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class DonationService : GenericRepository<Donation>, IDonationService
+    public class DonationService : GenericService<Donation>, IDonationService
     {
         public DonationService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
@@ -102,42 +101,42 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(shelterName))
             {
-                Expression<Func<Donation, bool>> shelterNamePredicated = d => d.Shelter.Name.ToLower().Contains(shelterName.ToLower());
-                filters.Add(shelterNamePredicated);
+                Expression<Func<Donation, bool>> shelterNameExpression = d => d.Shelter.Name.ToLower().Contains(shelterName.ToLower());
+                filters.Add(shelterNameExpression);
             }
             if (!string.IsNullOrWhiteSpace(donatorName))
             {
-                Expression<Func<Donation, bool>> donatorNamePredicated = d => d.Donator.FirstName.ToLower().Contains(donatorName.ToLower()) ||
+                Expression<Func<Donation, bool>> donatorNameExpression = d => d.Donator.FirstName.ToLower().Contains(donatorName.ToLower()) ||
                                                                          d.Donator.LastName.ToLower().Contains(donatorName.ToLower());
-                filters.Add(donatorNamePredicated);
+                filters.Add(donatorNameExpression);
             }
             if (minAmount != null)
             {
-                Expression<Func<Donation, bool>> minAmountPredicated = d => d.Amount >= minAmount;
-                filters.Add(minAmountPredicated);
+                Expression<Func<Donation, bool>> minAmountExpression = d => d.Amount >= minAmount;
+                filters.Add(minAmountExpression);
             }
             if (maxAmount != null)
             {
-                Expression<Func<Donation, bool>> maxAmountPredicated = d => d.Amount < maxAmount;
-                filters.Add(maxAmountPredicated);
+                Expression<Func<Donation, bool>> maxAmountExpression = d => d.Amount < maxAmount;
+                filters.Add(maxAmountExpression);
             }
             if (dateAfter != null)
             {
-                Expression<Func<Donation, bool>> dateAfterPredicated = d => d.Date >= dateAfter;
-                filters.Add(dateAfterPredicated);
+                Expression<Func<Donation, bool>> dateAfterExpression = d => d.Date >= dateAfter;
+                filters.Add(dateAfterExpression);
             }
             if (dateBefore != null)
             {
-                Expression<Func<Donation, bool>> dateBeforePredicated = d => d.Date < dateBefore;
+                Expression<Func<Donation, bool>> dateBeforeExpression = d => d.Date < dateBefore;
 
             }
             if (status != null)
             {
-                Expression<Func<Donation, bool>> statusPredicated = d => d.Status == status;
-                filters.Add(statusPredicated);
+                Expression<Func<Donation, bool>> statusExpression = d => d.Status == status;
+                filters.Add(statusExpression);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Shelter,Donator");
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
         }
     }
 }

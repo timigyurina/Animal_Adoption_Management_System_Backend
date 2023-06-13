@@ -3,7 +3,6 @@ using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +11,7 @@ using System.Security.Claims;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class AdoptionApplicationService : GenericRepository<AdoptionApplication>, IAdoptionApplicationService
+    public class AdoptionApplicationService : GenericService<AdoptionApplication>, IAdoptionApplicationService
     {
         public AdoptionApplicationService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
@@ -137,30 +136,30 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(animalName))
             {
-                Expression<Func<AdoptionApplication, bool>> animalNamePredicate = a => a.Animal.Name.ToLower().Contains(animalName.ToLower());
-                filters.Add(animalNamePredicate);
+                Expression<Func<AdoptionApplication, bool>> animalNameExpression = a => a.Animal.Name.ToLower().Contains(animalName.ToLower());
+                filters.Add(animalNameExpression);
             }
             if (!string.IsNullOrWhiteSpace(applierName))
             {
-                Expression<Func<AdoptionApplication, bool>> applierNamePredicate = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) ||
+                Expression<Func<AdoptionApplication, bool>> applierNameExpression = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) ||
                                                                                  a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
             }
             if (dateAfter != null)
             {
-                Expression<Func<AdoptionApplication, bool>> dateAfterPredicate = a => a.ApplicationDate >= dateAfter;
-                filters.Add(dateAfterPredicate);
+                Expression<Func<AdoptionApplication, bool>> dateAfterExpression = a => a.ApplicationDate >= dateAfter;
+                filters.Add(dateAfterExpression);
             }
             if (dateBefore != null)
             {
-                Expression<Func<AdoptionApplication, bool>> dateBeforePredicate = a => a.ApplicationDate < dateBefore;
-                filters.Add(dateBeforePredicate);
+                Expression<Func<AdoptionApplication, bool>> dateBeforeExpression = a => a.ApplicationDate < dateBefore;
+                filters.Add(dateBeforeExpression);
             }
             if (status != null)
             {
-                Expression<Func<AdoptionApplication, bool>> statusPredicate = a => a.Status == status;
-                filters.Add(statusPredicate);
+                Expression<Func<AdoptionApplication, bool>> statusExpression = a => a.Status == status;
+                filters.Add(statusExpression);
             }
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Animal,Applier");
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
         }
     }
 }

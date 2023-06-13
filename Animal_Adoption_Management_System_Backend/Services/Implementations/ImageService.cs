@@ -4,7 +4,6 @@ using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
 using Animal_Adoption_Management_System_Backend.Models.Pagination;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +11,7 @@ using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class ImageService : GenericRepository<Image>, IImageService
+    public class ImageService : GenericService<Image>, IImageService
     {
         private readonly IHostEnvironment _env;
 
@@ -99,32 +98,32 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(uploaderName))
             {
-                Expression<Func<Image, bool>> uploaderNamePredicate = i => i.Uploader.FirstName.ToLower().Contains(uploaderName.ToLower()) ||
+                Expression<Func<Image, bool>> uploaderNameExpression = i => i.Uploader.FirstName.ToLower().Contains(uploaderName.ToLower()) ||
                                                    i.Uploader.LastName.ToLower().Contains(uploaderName.ToLower());
-                filters.Add(uploaderNamePredicate);
+                filters.Add(uploaderNameExpression);
             }
             if (!string.IsNullOrWhiteSpace(animalName))
             {
-                Expression<Func<Image, bool>> animalNamePredicate = i => i.Animal.Name.ToLower().Contains(animalName.ToLower());
-                filters.Add(animalNamePredicate);
+                Expression<Func<Image, bool>> animalNameExpression = i => i.Animal.Name.ToLower().Contains(animalName.ToLower());
+                filters.Add(animalNameExpression);
             }
             if (animalType != null)
             {
-                Expression<Func<Image, bool>> animalTypePredicate = i => i.Animal.Type == animalType;
-                filters.Add(animalTypePredicate);
+                Expression<Func<Image, bool>> animalTypeExpression = i => i.Animal.Type == animalType;
+                filters.Add(animalTypeExpression);
             }
             if (takenBefore != null)
             {
-                Expression<Func<Image, bool>> takenBeforePredicate = i => i.DateTaken < takenBefore;
-                filters.Add(takenBeforePredicate);
+                Expression<Func<Image, bool>> takenBeforeExpression = i => i.DateTaken < takenBefore;
+                filters.Add(takenBeforeExpression);
             }
             if (takenAfter != null)
             {
-                Expression<Func<Image, bool>> takenAfterPredicate = i => i.DateTaken >= takenAfter;
-                filters.Add(takenAfterPredicate);
+                Expression<Func<Image, bool>> takenAfterExpression = i => i.DateTaken >= takenAfter;
+                filters.Add(takenAfterExpression);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Animal");
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
         }
 
         private string CreateImageFilePath(CreateImageDTO imageDTO)

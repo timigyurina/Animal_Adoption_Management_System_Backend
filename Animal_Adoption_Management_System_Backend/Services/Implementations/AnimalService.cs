@@ -3,7 +3,6 @@ using Animal_Adoption_Management_System_Backend.Models.DTOs.AnimalDTOs;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
 using Animal_Adoption_Management_System_Backend.Models.Enums;
 using Animal_Adoption_Management_System_Backend.Models.Exceptions;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
@@ -12,7 +11,7 @@ using System.Linq.Expressions;
 
 namespace Animal_Adoption_Management_System_Backend.Services.Implementations
 {
-    public class AnimalService : GenericRepository<Animal>, IAnimalService
+    public class AnimalService : GenericService<Animal>, IAnimalService
     {
         public AnimalService(AnimalAdoptionContext context, IMapper mapper) : base(context, mapper)
         {
@@ -117,6 +116,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 throw new NotFoundException(typeof(Animal).Name, id);
 
             return await _context.Animals
+                .Include(a => a.Breed)
                 .Include(a => a.Images)
                 .AsNoTracking()
                 .FirstAsync(a => a.Id == id);
@@ -128,6 +128,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
                 throw new NotFoundException(typeof(Animal).Name, animalId);
 
             return await _context.Animals
+                .Include(a => a.Breed)
                 .Include(a => a.AnimalShelters)
                     .ThenInclude(s => s.Shelter)
                 .FirstAsync(a => a.Id == animalId);
@@ -174,33 +175,33 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             List<Expression<Func<Animal, bool>>> filters = new();
             if (!string.IsNullOrWhiteSpace(name))
             {
-                Expression<Func<Animal, bool>> namePredicate = a => a.Name.ToLower().Contains(name.ToLower());
-                filters.Add(namePredicate);
+                Expression<Func<Animal, bool>> nameExpression = a => a.Name.ToLower().Contains(name.ToLower());
+                filters.Add(nameExpression);
             }
             if (type != null)
             {
-                Expression<Func<Animal, bool>> typePredicate = a => a.Type == type;
-                filters.Add(typePredicate);
+                Expression<Func<Animal, bool>> typeExpression = a => a.Type == type;
+                filters.Add(typeExpression);
             }
             if (size != null)
             {
-                Expression<Func<Animal, bool>> sizePredicate = a => a.Size == size;
-                filters.Add(sizePredicate);
+                Expression<Func<Animal, bool>> sizeExpression = a => a.Size == size;
+                filters.Add(sizeExpression);
             }
             if (status != null)
             {
-                Expression<Func<Animal, bool>> statusPredicate = a => a.Status == status;
-                filters.Add(statusPredicate);
+                Expression<Func<Animal, bool>> statusExpression = a => a.Status == status;
+                filters.Add(statusExpression);
             }
             if (gender != null)
             {
-                Expression<Func<Animal, bool>> genderPredicate = a => a.Gender == gender;
-                filters.Add(genderPredicate);
+                Expression<Func<Animal, bool>> genderExpression = a => a.Gender == gender;
+                filters.Add(genderExpression);
             }
             if (color != null)
             {
-                Expression<Func<Animal, bool>> colorPredicate = a => a.Color == color;
-                filters.Add(colorPredicate);
+                Expression<Func<Animal, bool>> colorExpression = a => a.Color == color;
+                filters.Add(colorExpression);
             }
             if (breedId != null)
             {
@@ -209,21 +210,21 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             }
             if (isSterilised != null)
             {
-                Expression<Func<Animal, bool>> isSterilisedPredicate = a => a.IsSterilised == isSterilised;
-                filters.Add(isSterilisedPredicate);
+                Expression<Func<Animal, bool>> isSterilisedExpression = a => a.IsSterilised == isSterilised;
+                filters.Add(isSterilisedExpression);
             }
             if (bornAfter != null)
             {
-                Expression<Func<Animal, bool>> bornAfterPredicate = a => a.BirthDate >= bornAfter;
-                filters.Add(bornAfterPredicate);
+                Expression<Func<Animal, bool>> bornAfterExpression = a => a.BirthDate >= bornAfter;
+                filters.Add(bornAfterExpression);
             }
             if (bornBefore != null)
             {
-                Expression<Func<Animal, bool>> bornBeforePredicate = a => a.BirthDate < bornBefore;
-                filters.Add(bornBeforePredicate);
+                Expression<Func<Animal, bool>> bornBeforeExpression = a => a.BirthDate < bornBefore;
+                filters.Add(bornBeforeExpression);
             }
 
-            return await GetPagedAndFiltered<TResult>(queryParameters, filters, "Breed");
+            return await GetPagedAndFiltered<TResult>(queryParameters, filters);
         }
 
         public AnimalShelter GetLatestShelterConnectionOfAnimal(Animal animalWithDetails)
@@ -241,7 +242,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return latestShelterConnection;
         }
 
-        private void CheckAnimalAndAnimalTypeBreedMatch(Animal entity)
+        private static void CheckAnimalAndAnimalTypeBreedMatch(Animal entity)
         {
             if (entity.Type != entity.Breed.Type)
                 throw new BadRequestException("The type of the Animal and the type of the provided Breed do not match");
