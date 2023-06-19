@@ -51,7 +51,8 @@ namespace Animal_Adoption_Management_System_Backend.Configurations
 
             CreateMap<AdoptionApplication, AdoptionApplicationDTO>().ReverseMap();
             CreateMap<AdoptionApplication, AdoptionApplicationDTOWithDetails>().ReverseMap();
-            CreateMap<AdoptionApplication, CreateAdoptionApplicationDTO>().ReverseMap();
+            CreateMap<AdoptionApplication, AdoptionApplicationDTOWithAnimal>().ReverseMap();
+            //CreateMap<AdoptionApplication, CreateAdoptionApplicationDTO>().ReverseMap();
 
             CreateMap<AdoptionContract, AdoptionContractDTO>().ReverseMap();
             CreateMap<AdoptionContract, AdoptionContractDTOWithDetails>().ReverseMap();

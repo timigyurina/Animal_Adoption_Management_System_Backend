@@ -8,7 +8,7 @@ namespace Animal_Adoption_Management_System_Backend.Models.DTOs.UserDTOs
         public string FirstName { get; set; }
         [Required]
         public string LastName { get; set; }
-        [Required]
+        [Required] 
         public string PhoneNumber { get; set; }
         [Required]
         public DateTime DateOfBirth { get; set; }
