@@ -66,7 +66,7 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return await adoptionApplicationQuery.ToListAsync();
         }
 
-        public async Task<AdoptionApplication> TryAddAnimalAndApplierToAdoptionApplication(AdoptionApplication adoptionApplicationToCreate, int animalId, ClaimsPrincipal applier)
+        public async Task<AdoptionApplication> TryAddAnimalAndApplierToAdoptionApplication(int animalId, ClaimsPrincipal applier)
         {
             Animal animal = await _context.Animals
                 .FirstOrDefaultAsync(a => a.Id == animalId) ?? throw new NotFoundException(typeof(Animal).Name, animalId);
@@ -78,10 +78,13 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             if (animal.Status != AnimalStatus.WaitingForAdoption)
                 throw new BadRequestException($"Animal with id {animalId} is not adoptable");
 
-            adoptionApplicationToCreate.Animal = animal;
-            adoptionApplicationToCreate.Applier = foundApplier;
-            adoptionApplicationToCreate.ApplicationDate = DateTime.Today;
-            adoptionApplicationToCreate.Status = ApplicationStatus.Submitted;
+            AdoptionApplication adoptionApplicationToCreate = new()
+            {
+                Animal = animal,
+                Applier = foundApplier,
+                ApplicationDate = DateTime.Today,
+                Status = ApplicationStatus.Submitted
+            };
 
             return adoptionApplicationToCreate;
         }
@@ -141,8 +144,8 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             }
             if (!string.IsNullOrWhiteSpace(applierName))
             {
-                Expression<Func<AdoptionApplication, bool>> applierNameExpression = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) ||
-                                                                                 a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
+                Expression<Func<AdoptionApplication, bool>> applierNameExpression = a => a.Applier.LastName.ToLower().Contains(applierName.ToLower()) || a.Applier.FirstName.ToLower().Contains(applierName.ToLower());
+                filters.Add(applierNameExpression);
             }
             if (dateAfter != null)
             {

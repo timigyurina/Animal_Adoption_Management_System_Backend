@@ -82,14 +82,13 @@ namespace Animal_Adoption_Management_System_Backend.Controllers
 
         [HttpPost]
         [Authorize(Policy = "MinimalAge")]
-        public async Task<ActionResult<AdoptionApplicationDTO>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)
+        public async Task<ActionResult<AdoptionApplicationDTOWithAnimal>> CreateAdoptionApplication(CreateAdoptionApplicationDTO applicationDTO)
         {
-            AdoptionApplication adoptionApplicationToCreate = _mapper.Map<AdoptionApplication>(applicationDTO);
-            AdoptionApplication adoptionApplicationToCreateWithAnimalAndApplier = await _adoptionApplicationService.TryAddAnimalAndApplierToAdoptionApplication(adoptionApplicationToCreate, applicationDTO.AnimalId, User);
+            AdoptionApplication adoptionApplicationToCreateWithAnimalAndApplier = await _adoptionApplicationService.TryAddAnimalAndApplierToAdoptionApplication(applicationDTO.AnimalId, User);
 
             AdoptionApplication createdAdoptionApplication = await _adoptionApplicationService.AddAsync(adoptionApplicationToCreateWithAnimalAndApplier);
 
-            AdoptionApplicationDTO createdAdoptionApplicationDTO = _mapper.Map<AdoptionApplicationDTO>(createdAdoptionApplication);
+            AdoptionApplicationDTOWithAnimal createdAdoptionApplicationDTO = _mapper.Map<AdoptionApplicationDTOWithAnimal>(createdAdoptionApplication);
             return CreatedAtAction("GetAdoptionApplication", new { id = createdAdoptionApplication.Id }, createdAdoptionApplicationDTO);
         }
 
