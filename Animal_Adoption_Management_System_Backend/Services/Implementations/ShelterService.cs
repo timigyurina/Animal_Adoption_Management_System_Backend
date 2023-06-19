@@ -101,17 +101,6 @@ namespace Animal_Adoption_Management_System_Backend.Services.Implementations
             return shelterToUpdate;
         }
 
-        public async Task<Shelter> UpdateShelterContactPerson(int id, string contactPersonId)
-        {
-            Shelter shelterToUpdate = await GetAsync(id);
-            User? contactPerson = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == contactPersonId) ?? throw new NotFoundException(typeof(User).Name, contactPersonId);
-
-            await UpdateAsync(shelterToUpdate);
-
-            return shelterToUpdate;
-        }
-
         public async Task<PagedResult<TResult>> GetPagedAndFilteredSheltersAsync<TResult>(
             QueryParameters queryParameters,
             string? name, string? contactPersonName, bool? isActive)
