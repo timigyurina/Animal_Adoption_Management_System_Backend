@@ -3,7 +3,6 @@ using Animal_Adoption_Management_System_Backend.Configurations;
 using Animal_Adoption_Management_System_Backend.Data;
 using Animal_Adoption_Management_System_Backend.Middlewares;
 using Animal_Adoption_Management_System_Backend.Models.Entities;
-using Animal_Adoption_Management_System_Backend.Repositories;
 using Animal_Adoption_Management_System_Backend.Services.Implementations;
 using Animal_Adoption_Management_System_Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -52,7 +51,7 @@ builder.Services.AddSingleton<IEnumService, EnumService>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
 builder.Services.AddScoped<IPermissionChecker, PermissionChecker>();
 
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 builder.Services.AddScoped<IAnimalBreedService, AnimalBreedService>();
 builder.Services.AddScoped<IAnimalService, AnimalService>();
 builder.Services.AddScoped<IShelterService, ShelterService>();
